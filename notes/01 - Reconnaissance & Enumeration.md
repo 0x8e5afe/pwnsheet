@@ -674,34 +674,56 @@ nmap -sV --script=banner -p <PORT> <RHOST>
 
 ### 3.3 Baseline checks by service
 
-**SSH (22):**
+**SSH (22)**
 
 ```bash
+# SSH connection with null authentication attempt
 ssh -o PreferredAuthentications=none -o ConnectTimeout=5 <RHOST>
+```
+
+```bash
+# Verbose SSH to enumerate supported authentication mechanisms
 ssh -v <RHOST> 2>&1 | grep "Authentications that can continue"
+```
+
+```bash
+# Nmap SSH enumeration: algorithms, host keys, authentication methods
 nmap -p 22 --script ssh2-enum-algos,ssh-hostkey,ssh-auth-methods <RHOST>
 ```
 
 **FTP (21):**
 
 ```bash
-ftp <RHOST>
-# Try: anonymous / anonymous
+# Connect to FTP (try anonymous login)
+ftp <RHOST> # Try: anonymous / anonymous
+```
+
+```bash
+# Nmap FTP enumeration
 nmap -p 21 --script ftp-anon,ftp-bounce,ftp-syst <RHOST>
 ```
 
 **SMTP (25):**
 
 ```bash
-nc -nv <RHOST> 25
-# Commands: HELO test, VRFY root, EXPN admin
+# Banner grab and testing with Netcat
+nc -nv <RHOST> 25 # Tru: HELO test, VRFY root, EXPN admin
+```
+
+```bash
+# Telnet for interactive SMTP commands
 telnet <RHOST> 25
 ```
 
 **RPC/NFS hints:**
 
 ```bash
+# Enumerate RPC services
 rpcinfo -p <RHOST>
+```
+
+```bash
+# Nmap RPC enumeration
 nmap -p 111 --script rpcinfo <RHOST>
 ```
 

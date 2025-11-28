@@ -185,6 +185,7 @@ function renderContent() {
     document.getElementById('contentArea').innerHTML = html;
     
     addCopyButtonsToCodeBlocks();
+    highlightHashComments();
     makeCheckboxesInteractive();
     setupCodeBlockSelection();
 }
@@ -270,6 +271,50 @@ function addCopyButtonsToCodeBlocks() {
         });
 
         wrapper.appendChild(copyBtn);
+    });
+}
+
+function highlightHashComments() {
+    const codeBlocks = document.querySelectorAll('#contentArea pre > code');
+
+    codeBlocks.forEach(codeBlock => {
+        const className = (codeBlock.className || '').toLowerCase();
+        const langMatch = className.match(/language-([a-z0-9_+-]+)/);
+        const language = langMatch ? langMatch[1] : '';
+
+        if (language === 'markdown' || language === 'sql') {
+            return;
+        }
+
+        const escapeHtml = (value) => value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        const lines = codeBlock.textContent.split('\n');
+        let hasHashComments = false;
+
+        const highlightedHtml = lines
+            .map(line => {
+                const match = line.match(/(^|\s)#/);
+
+                if (!match) {
+                    return escapeHtml(line);
+                }
+
+                const hashIndex = (match.index || 0) + match[1].length;
+                hasHashComments = true;
+
+                const codePart = line.slice(0, hashIndex);
+                const commentPart = line.slice(hashIndex);
+
+                return `${escapeHtml(codePart)}<span class="hash-comment">${escapeHtml(commentPart)}</span>`;
+            })
+            .join('\n');
+
+        if (hasHashComments) {
+            codeBlock.innerHTML = highlightedHtml;
+        }
     });
 }
 

@@ -461,6 +461,10 @@ body {
     font-size: 0.875rem;
 }
 
+.code-block code .hash-comment {
+    color: var(--accent-color);
+}
+
 .code-block {
     position: relative;
     margin: 1.5rem 0;
