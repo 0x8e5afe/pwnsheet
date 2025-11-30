@@ -10,20 +10,20 @@ Use compromised hosts as **pivot points** to reach internal networks and hidden 
 
 ## 📋 Table of Contents
 
-1. [Tool Selection Strategy](#71-tool-selection-strategy)
-2. [Ligolo-ng Setup](#72-ligolo-ng-setup)
-3. [Ligolo-ng Basic Usage](#73-ligolo-ng-basic-usage)
-4. [Ligolo-ng Port Forwarding](#74-ligolo-ng-port-forwarding)
-5. [Multi-Hop Pivoting](#75-multi-hop-pivoting)
-6. [SSH Tunneling](#76-ssh-tunneling)
-7. [Chisel](#77-chisel)
-8. [Alternative Tools](#78-alternative-tools)
-9. [Quick Reference](#79-quick-reference)
+1. [Tool Selection Strategy](#51-tool-selection-strategy)
+2. [Ligolo-ng Setup](#52-ligolo-ng-setup)
+3. [Ligolo-ng Basic Usage](#53-ligolo-ng-basic-usage)
+4. [Ligolo-ng Port Forwarding](#54-ligolo-ng-port-forwarding)
+5. [Multi-Hop Pivoting](#55-multi-hop-pivoting)
+6. [SSH Tunneling](#56-ssh-tunneling)
+7. [Chisel](#57-chisel)
+8. [Alternative Tools](#58-alternative-tools)
+9. [Quick Reference](#59-quick-reference)
 
 
 ---
 
-## 7.1 Tool Selection Strategy
+## 5.1 Tool Selection Strategy
 
 |Tool|Use Case|Complexity|
 |---|---|---|
@@ -34,7 +34,7 @@ Use compromised hosts as **pivot points** to reach internal networks and hidden 
 
 ---
 
-## 7.2 Ligolo-ng Setup
+## 5.2 Ligolo-ng Setup
 
 ### Download & Install
 
@@ -64,7 +64,7 @@ sudo ip link set ligolo up
 
 ---
 
-## 7.3 Ligolo-ng Basic Usage
+## 5.3 Ligolo-ng Basic Usage
 
 ### Start Proxy (Attack Machine)
 
@@ -116,7 +116,7 @@ nmap -sT -Pn 10.10.10.0/24
 
 ---
 
-## 7.4 Ligolo-ng Port Forwarding
+## 5.4 Ligolo-ng Port Forwarding
 
 ### Create Listeners
 
@@ -148,7 +148,7 @@ impacket-mssqlclient sa:password@localhost:1433
 
 ---
 
-## 7.5 Multi-Hop Pivoting
+## 5.5 Multi-Hop Pivoting
 
 ### Scenario
 
@@ -182,7 +182,7 @@ nmap -sT -Pn 172.16.0.0/24
 
 ---
 
-## 7.6 SSH Tunneling
+## 5.6 SSH Tunneling
 
 ### Local Port Forward
 
@@ -223,7 +223,7 @@ curl http://localhost:8080/
 
 ---
 
-## 7.7 Chisel
+## 5.7 Chisel
 
 ### Download
 
@@ -276,7 +276,7 @@ proxychains nmap -sT -Pn 10.10.10.0/24
 
 ---
 
-## 7.8 Alternative Tools
+## 5.8 Alternative Tools
 
 ### Socat TCP Relay
 
@@ -326,7 +326,7 @@ socks5 127.0.0.1 1080
 
 ---
 
-## 7.9 Quick Reference
+## 5.9 Quick Reference
 
 ### Ligolo-ng Complete Flow
 

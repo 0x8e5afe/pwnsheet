@@ -94,9 +94,10 @@ async function loadMarkdownFiles() {
         '02 - Vulnerability Assessment & Web Testing.md',
         '03 - Exploitation (Infrastructure & Web).md',
         '04 - Post Exploitation & Privilege Escalation.md',
-        '05 - Active Directory Exploitation.md',
+        '05 - Pivoting with Ligolo-ng & Tunneling Strategy.md',
         '06 - Lateral Movement.md',
-        '07 - Pivoting with Ligolo-ng & Tunneling Strategy.md'
+        '07 - Active Directory Exploitation.md',
+
     ];
 
     const phaseList = document.getElementById('phaseList');
