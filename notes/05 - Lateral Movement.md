@@ -18,48 +18,47 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 
 ## 📋 Phase Checklist
 
-### 📊 Inventory & Asset Management
+### Strategy & Visualization
 
-- [ ] **Inventory credential exposure (source/scope/handling)** → [1.2](#12-centralized-movement-tracking-table)
-- [ ] **Record hashes/tickets exposure (safe evidence)** → [5.2](#52-pass-the-ticket-ptt-movement)
-- [ ] **Maintain compromised-systems map (access/evidence)** → [1.1](#11-network-visualization-concept)
-- [ ] **Track local-admin relationships/coverage** → [6.1](#61-centralized-movement-dashboard)
+- [ ] **Visualize Nodes & Edges** → [1.1](#11-network-visualization-concept)
+- [ ] **Init Tracking Table** → [1.2](#12-centralized-movement-tracking-table)
+- [ ] **Identify High-Value Targets** → [1.2](#12-centralized-movement-tracking-table)
 
-### 🪟 Windows Movement Surface (Assessment)
+### Windows Movement
+- [ ] **PSExec/SMB Exec** → [2.1](#21-psexec-style-execution)
+- [ ] **WMI Lateral Move** → [2.2](#22-wmi-based-movement)
+- [ ] **WinRM/PS Remoting** → [2.3](#23-winrm-and-powershell-remoting)
+- [ ] **RDP Access** → [2.4](#24-rdp-remote-desktop)
+- [ ] **Service Execution** → [2.5](#25-service-based-execution)
 
-- [ ] **Assess remote exec exposure (admin tooling)** → [2.1](#21-psexec-style-execution)
-- [ ] **Assess WMI/RPC exposure + controls** → [2.2](#22-wmi-based-movement)
-- [ ] **Assess WinRM/PSRemoting posture** → [2.3](#23-winrm-and-powershell-remoting)
-- [ ] **Assess RDP posture (NLA/MFA/groups/segmentation)** → [2.4](#24-rdp-remote-desktop)
-- [ ] **Assess service-based exec risk drivers** → [2.5](#25-service-based-execution)
+### Linux Movement
+- [ ] **SSH Access/Keys** → [3.1](#31-ssh-access)
+- [ ] **Proxychains Pivot** → [3.2](#32-proxychains-pivoting)
+- [ ] **Harvest SSH Keys** → [3.3](#33-ssh-key-harvesting)
+- [ ] **SSH Agent Hijack** → [3.3](#33-ssh-key-harvesting)
 
-### 🐧 Linux Movement Surface (Assessment)
+### Credential Ops
+- [ ] **Inventory Creds** → [4.1](#41-credential-inventory-management)
+- [ ] **SMB/WinRM Spray** → [4.2](#42-targeted-password-spraying)
+- [ ] **SSH/RDP Spray** → [4.2](#42-targeted-password-spraying)
+- [ ] **Check Safety/Lockout** → [4.3](#43-spraying-safety-measures)
 
-- [ ] **Assess SSH posture (auth/keys/PAM/MFA)** → [3.1](#31-ssh-access)
-- [ ] **Assess pivoting controls (segmentation/egress)** → [3.2](#32-proxychains-pivoting)
-- [ ] **Assess SSH key exposure + remediation** → [3.3](#33-ssh-key-harvesting)
-- [ ] **Assess agent forwarding exposure/policy** → [3.3](#33-ssh-key-harvesting)
+### AD-Specific Movement
+- [ ] **Pass-the-Hash (PtH)** → [5.1](#51-pass-the-hash-pth-strategy)
+- [ ] **Pass-the-Ticket (PtT)** → [5.2](#52-pass-the-ticket-ptt-movement)
+- [ ] **Golden/Silver Ticket** → [5.2](#52-pass-the-ticket-ptt-movement)
+- [ ] **Hunt Admin Sessions** → [5.3](#53-admin-session-exploitation)
+- [ ] **Dump LSASS/Secrets** → [5.3](#53-admin-session-exploitation)
 
-### 🔑 Credential Reuse & Spraying (Risk Review)
+### Attack Path Analysis
+- [ ] **Run BloodHound** → [5.4](#54-bloodhound-informed-movement)
+- [ ] **Map Shortest Paths** → [5.4](#54-bloodhound-informed-movement)
+- [ ] **Target ACLs/GPOs** → [5.4](#54-bloodhound-informed-movement)
 
-- [ ] **Assess reuse risk (approved/rate-limited)** → [4.1](#41-credential-inventory-management)
-- [ ] **Assess spraying controls (lockout/MFA/detection)** → [4.2](#42-targeted-password-spraying)
-- [ ] **Track outcomes in evidence table** → [4.1](#41-credential-inventory-management)
-- [ ] **Confirm lockout/safety constraints** → [4.3](#43-spraying-safety-measures)
-
-### 🏰 AD-Specific Exposure & Containment (Assessment)
-
-- [ ] **Assess NTLM replay risk + mitigations** → [5.1](#51-pass-the-hash-pth-strategy)
-- [ ] **Assess Kerberos ticket misuse + mitigations** → [5.2](#52-pass-the-ticket-ptt-movement)
-- [ ] **Assess admin-session sprawl exposure** → [5.3](#53-admin-session-exploitation)
-- [ ] **Assess LSASS/store hardening enforcement** → [5.3](#53-admin-session-exploitation)
-
-### 📈 Progress Tracking
-
-- [ ] **Maintain movement/risk dashboard (evidence)** → [6.1](#61-centralized-movement-dashboard)
-- [ ] **Document hypothesized attack paths (impact/controls)** → [5.4](#54-bloodhound-informed-movement)
-- [ ] **Prioritize next targets (value/exposure/likelihood)** → [6.2](#62-next-target-prioritization)
-- [ ] **Confirm persistence testing is approved** → [6.1](#61-centralized-movement-dashboard)
+### 7. Tracking & Documentation
+- [ ] **Update Dashboard** → [6.1](#61-centralized-movement-dashboard)
+- [ ] **Prioritize Targets** → [6.2](#62-next-target-prioritization)
+- [ ] **Map Compromise Path** → [6.2](#62-next-target-prioritization)
 
 ---
 
