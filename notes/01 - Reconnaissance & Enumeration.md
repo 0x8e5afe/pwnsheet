@@ -1,7 +1,7 @@
 # Reconnaissance & Enumeration
 
 ## 🎯 Goal
-Build a complete, repeatable picture of each target: live hosts, open ports, services, versions, web surfaces, file shares, domains, and protocols. Work through this file top-to-bottom for every subnet and every host. Record everything in the templates at the end.
+Build a complete, repeatable picture of each target: live hosts, open ports, services, versions, web surfaces, file shares, domains, and protocols. Work through this file top-to-bottom for every subnet and every host.
 
 ## Table of Contents
 
@@ -22,7 +22,6 @@ Build a complete, repeatable picture of each target: live hosts, open ports, ser
 15. [Database Enumeration](#15-database-enumeration)
 16. [RDP/VNC Enumeration](#16-rdpvnc-enumeration)
 17. [Active Directory Enumeration](#17-active-directory-enumeration)
-18. [Documentation and Hypotheses](#18-documentation-and-hypotheses)
 
 ---
 
@@ -134,12 +133,6 @@ Build a complete, repeatable picture of each target: live hosts, open ports, ser
 - [ ] **Enumerate shares/files** → [17.4](#174-share-enumeration)
 - [ ] **BloodHound analysis** → [17.5](#175-bloodhound--sharphound)
 - [ ] **Extract credentials** → [17.6](#176-credential-dumping)
-
-### Documentation
-
-- [ ] **Record OS/role + confidence** → [18.1](#181-suspected-os-and-role)
-- [ ] **Track attack hypotheses** → [18.2](#182-attack-hypotheses)
-- [ ] **Maintain host notes/inventory** → [18.3](#183-host-notes-repeat-per-host), [18.4](#184-network-inventory-per-subnet)
 
 ---
 
@@ -2015,154 +2008,3 @@ procdump.exe -ma lsass.exe lsass.dmp
 # SafetyKatz (obfuscated Mimikatz)
 .\SafetyKatz.exe
 ```
-
---- 
-
-## 18. Documentation and Hypotheses
-
-### 18.1 Suspected OS and role
-
-Infer OS/role from:
-
-- TTL values (64=Linux, 128=Windows, 255=Cisco/Network)
-- Window size and TCP options
-- Service banners
-- Open port combinations
-- Web stack technologies
-
-**OS Fingerprinting commands:**
-
-```bash
-# Nmap OS detection
-sudo nmap -O <RHOST>
-sudo nmap -O --osscan-guess <RHOST>
-
-# TTL-based guess
-ping -c 1 <RHOST> | grep ttl
-
-# p0f passive fingerprinting
-p0f -i eth0
-```
-
-
-State confidence (high/medium/low) in notes.
-
-### 18.2 Attack hypotheses
-
-For each host, list likely entry points by evidence:
-
-- Exposed file share containing credentials
-- Outdated public service version with known CVE
-- Weak export permissions (NFS no_root_squash)
-- Web app with upload or LFI surface
-- Default credentials on service
-- Misconfigured permissions
-- Anonymous access enabled
-
-Keep hypotheses short and testable.
-
-### 18.3 Host notes (repeat per host)
-
-Use this exact template:
-
-```markdown
-# Host: <RHOST>
-
-## Basic Information
-- IP Address: <RHOST>
-- Hostname: <if any>
-- Suspected OS: <guess + evidence>
-- Role: <guess + evidence>
-
-## Port Scan Results
-### TCP
-| Port | Service | Version | Notes |
-|------|---------|---------|-------|
-|      |         |         |       |
-
-### UDP
-| Port | Service | Version | Notes |
-|------|---------|---------|-------|
-|      |         |         |       |
-
-## Service Enumeration Findings
-- SSH:
-- FTP:
-- SMB:
-- NFS:
-- LDAP:
-- SNMP:
-- SMTP:
-- Databases:
-- Other:
-
-## Web Findings
-Per port/vhost note:
-- URL:
-- Title/Stack:
-- Interesting paths:
-- Special files:
-- Parameters/APIs:
-- Auth/upload surfaces:
-- CMS type and version:
-
-## Shares / Exports Findings
-- SMB shares:
-- NFS exports:
-- FTP/WebDAV/etc:
-
-## Credentials Found
-| Username | Password | Source | Service |
-|----------|----------|--------|---------|
-|          |          |        |         |
-
-## Initial Attack Vectors
-1.
-2.
-3.
-
-## Vulnerability Assessment
-| Service | Vulnerability | CVE | Exploit Available |
-|---------|---------------|-----|-------------------|
-|         |               |     |                   |
-
-## Next Steps
-- [ ] ...
-- [ ] ...
-```
-
----
-
-### 18.4 Network Inventory (per subnet)
-
-```markdown
-# Network: <SUBNET>
-
-## Host Inventory
-| IP | Hostname | OS | Role | Key Services | Priority |
-|----|----------|----|----- |--------------|----------|
-|    |          |    |      |              |          |
-
-## Relationships / Notes
-- Domain(s):
-- Trusts:
-- North–south dependencies (web→db, app→ldap):
-- Shared storage:
-- Network segmentation:
-
-## Credentials Collected
-| Username | Password/Hash | Domain | Source |
-|----------|---------------|--------|--------|
-|          |               |        |        |
-
-## Critical Findings
-1.
-2.
-3.
-
-## Attack Path Summary
-```
-
-
-
-

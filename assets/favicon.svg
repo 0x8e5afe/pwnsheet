@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Pwnsheet paper icon" fill="none">
+  <path d="M16 8h20l12 12v36H16Z" stroke="#00d46b" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M36 8v12h12" stroke="#00d46b" stroke-width="4" stroke-linecap="round"/>
+  <line x1="22" y1="30" x2="42" y2="30" stroke="#00d46b" stroke-width="3" stroke-linecap="round"/>
+  <line x1="22" y1="38" x2="42" y2="38" stroke="#00d46b" stroke-width="3" stroke-linecap="round"/>
+  <line x1="22" y1="46" x2="34" y2="46" stroke="#00d46b" stroke-width="3" stroke-linecap="round"/>
+</svg>

