@@ -877,6 +877,232 @@ Content-Type: application/json
         };
     }
 
+     if (templateType === 'oscp') {
+        const standaloneTemplate = `# Machine - XXXXXX
+
+## Target Info
+**IP:** 
+**Hostname:** 
+**OS:** 
+**Difficulty:** 
+
+## Recon & Enumeration
+
+### Nmap
+~~~bash
+
+~~~
+
+### Open Ports
+| Port | Proto | Service | Version | Notes |
+|------|-------|---------|---------|-------|
+|      |       |         |         |       |
+
+### Service Notes
+- 
+
+### Web
+- **URLs/Dirs:**
+- **Interesting params/cookies:**
+- **Potential vulns:**
+
+### SMB / RPC
+- 
+
+### FTP / SSH / RDP
+- 
+
+## Exploitation
+
+### Initial Access
+- **Vector:**
+- **User gained:**
+- **Proof / evidence:**
+
+### Payloads / Commands
+~~~bash
+
+~~~
+
+## Privilege Escalation
+
+### Local Enumeration
+~~~bash
+
+~~~
+
+### Findings
+- 
+
+### Privesc Technique
+- **Technique:**
+- **Why it works:**
+- **Steps:**
+
+### Commands / Exploit Notes
+~~~bash
+
+~~~
+
+## Loot / Proof
+- **local.txt:** 
+- **proof.txt:** 
+
+## Cleanup / Notes
+- 
+`;
+
+        const adMachineTemplate = `# AD Machine - XXXXXX
+
+## Target Info
+**IP:** 
+**Hostname:** 
+**Role:** (DC / Member Server / Workstation)
+**OS:** 
+
+## Enumeration
+
+### Nmap
+~~~bash
+
+~~~
+
+### Open Ports
+| Port | Proto | Service | Version | Notes |
+|------|-------|---------|---------|-------|
+|      |       |         |         |       |
+
+### SMB
+- **Shares:**
+- **Interesting files:**
+- **Users/groups discovered:**
+
+### LDAP
+- 
+
+### Kerberos
+- 
+
+### WinRM / RDP
+- 
+
+## Exploitation / Lateral Movement
+
+### Access Obtained
+- **Method:**
+- **User:**
+- **Session type:** (SMB/WinRM/RDP/PSExec/etc.)
+
+### Commands / Notes
+~~~powershell
+
+~~~
+
+## Privilege Escalation / AD Abuse
+
+### Local privesc
+- 
+
+### AD-related opportunities
+- **Delegations/ACLs:**
+- **GPP/Policies:**
+- **SPNs/Kerberoast:**
+- **ASREPRoast:**
+- **Unconstrained/Constrained delegation:**
+- **Certificate Services:**
+
+## Loot / Proof
+- 
+
+## Notes
+- 
+`;
+
+        return {
+'README.md': `# OSCP Notes Skeleton (Empty)
+
+This kit is intended to be filled during OSCP-style labs/exams.
+
+## Structure
+- **standalone/**: 3 standalone machines (one file each)
+- **AD/**:
+  - **AD/general.md**: general AD notes (enum, attacks, hypotheses)
+  - **AD/credentials.md**: credentials discovered (cleartext/hashes/tickets)
+  - **AD/machines/**: 3 AD-related machines (one file each)
+`,
+
+'standalone/standalone-01.md': standaloneTemplate,
+'standalone/standalone-02.md': standaloneTemplate,
+'standalone/standalone-03.md': standaloneTemplate,
+
+'AD/general.md': `# Active Directory - General Notes
+
+## Environment
+**Domain:** 
+**Forest:** 
+**DC(s):** 
+**Time sync / skew:** 
+**ROE / Constraints:** 
+
+## Enumeration
+
+### Network / Host discovery
+~~~bash
+
+~~~
+
+### SMB / Shares / Sessions
+~~~bash
+
+~~~
+
+### LDAP
+~~~bash
+
+~~~
+
+### Kerberos
+~~~bash
+
+~~~
+
+### BloodHound
+- **Collection method:**
+- **SharpHound command:**
+~~~powershell
+
+~~~
+- **Interesting edges / paths:**
+- 
+
+## Attacks / Hypotheses
+- 
+
+## Execution Log (Chronological)
+- 
+
+## Useful Commands (Pasteboard)
+~~~bash
+
+~~~
+`,
+
+'AD/credentials.md': `# AD Credentials
+
+| Source | Username | Secret (Password/Hash/Ticket) | Type | Where Tested | Works | Notes |
+|--------|----------|-------------------------------|------|--------------|-------|-------|
+|        |          |                               |      |              |       |       |
+
+## Notes
+- 
+`,
+
+'AD/machines/ad-01.md': adMachineTemplate,
+'AD/machines/ad-02.md': adMachineTemplate,
+'AD/machines/ad-03.md': adMachineTemplate,
+        };
+    }
+
     return {
 'README.md': `# Pentest Notes
 
