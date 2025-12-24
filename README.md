@@ -28,6 +28,7 @@ Everything follows an interactive, dynamic approach—helpers react to your inpu
 - **🚚 File Transfer Helper** - Generates sender/receiver commands for faster file moves across hosts
 - **🐚 Shells Helper** - Reverse shell oneliners, web shells, and stabilization commands on demand
 - **🧰 Tools & Wordlists Table** - Quick download/install commands for common tools and wordlists
+- **📝 Skeleton Notes Downloader** - Grab templated markdown notes to capture findings during assessments
 
 ## 🚀 Quick Start
 
@@ -75,9 +76,7 @@ Example workflow:
 - Use the Reset button to start a fresh assessment
 
 ### 4. Copy Commands
-- Hover over any code block to reveal the copy button
-- Comments (lines starting with `#`) are automatically stripped when copying
-- Code blocks highlight when selected for parameter filtering
+- Simply highlight the piece of code in a snippet to copy it
 
 ## 🏗️ Project Structure
 
