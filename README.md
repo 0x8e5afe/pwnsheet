@@ -47,14 +47,7 @@ python3 -m http.server 8000
 ## 📖 How to Use
 
 ### 1. Select a Phase
-Click any phase in the left panel to load its checklist:
-- Reconnaissance & Enumeration
-- Vulnerability Assessment & Web Testing
-- Exploitation (Infrastructure & Web)
-- Post Exploitation & Privilege Escalation
-- Active Directory Exploitation
-- Lateral Movement
-- Pivoting with Ligolo-ng & Tunneling Strategy
+Click any phase in the left panel to load its checklist and related cheatsheet.
 
 ### 2. Work with Parameters
 Parameters appear in the right panel when present in a phase. They use the format `<PARAMETER_NAME>` or `{{PARAMETER_NAME}}`:
