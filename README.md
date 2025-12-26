@@ -11,7 +11,7 @@
 
 ## 🎯 What is Pwnsheet?
 
-A smart, interactive cheatsheet designed to streamline penetration testing assessments. Pwnsheet transforms static markdown checklists into a dynamic, browser-based workspace with intelligent parameter management and progress tracking.
+A smart, interactive cheatsheet designed to streamline penetration testing assessments. Pwnsheet transforms static markdown notes into a dynamic, browser-based workspace with intelligent parameter management and progress tracking.
 
 ![Pwnsheet Screenshot](assets/screenshot.png) 
 
