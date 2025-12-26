@@ -147,7 +147,7 @@ Unauthorized access to computer systems is illegal. The authors assume no liabil
 
 <div align="center">
 
-Made with ❤️ by [Giuseppe Toscano](https://0x8e5afe.github.io/portfolio/)
+Made with ❤️ by [Giuseppe Toscano](https://gtoscano.me)
 
 [⭐ Star on GitHub](https://github.com/0x8e5afe/cybersuite)
 
