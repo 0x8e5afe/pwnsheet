@@ -1,3 +1,5 @@
+let phaseTextIndex = {};
+
 async function loadMarkdownFiles() {
     const mdFiles = [
         '01 - Reconnaissance & Enumeration.md',
@@ -21,6 +23,7 @@ async function loadMarkdownFiles() {
             if (response.ok) {
                 const content = await response.text();
                 phases[filename] = content;
+                phaseTextIndex[filename] = extractPlainTextFromMarkdown(content);
                 loadedCount++;
                 collectParametersFromContent(content, discoveredParams);
                 
@@ -900,4 +903,318 @@ function isInitialParamsSkipped() {
         console.warn('Could not read initial modal skip state', error);
         return false;
     }
+}
+
+function extractPlainTextFromMarkdown(content) {
+    if (!content) {
+        return '';
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = marked.parse(content);
+    return wrapper.textContent || '';
+}
+
+function setupGlobalSearchModal() {
+    const modal = document.getElementById('globalSearchModal');
+    const button = document.getElementById('globalSearchBtn');
+    const input = document.getElementById('globalSearchInput');
+    const resultsContainer = document.getElementById('globalSearchResults');
+
+    if (!modal || !button || !input || !resultsContainer || modal.dataset.initialized === 'true') {
+        return;
+    }
+
+    const render = () => {
+        renderGlobalSearchResults(input.value.trim(), resultsContainer, modal);
+    };
+
+    button.addEventListener('click', () => {
+        if (typeof openModal === 'function') {
+            openModal(modal);
+        } else {
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+        input.focus();
+        input.select();
+    });
+
+    input.addEventListener('input', render);
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            const firstResult = resultsContainer.querySelector('.global-search-result');
+            if (firstResult) {
+                firstResult.click();
+            }
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+            event.preventDefault();
+            if (typeof openModal === 'function') {
+                openModal(modal);
+            } else {
+                modal.classList.add('show');
+                modal.setAttribute('aria-hidden', 'false');
+            }
+            input.focus();
+            input.select();
+        }
+    });
+
+    renderGlobalSearchResults('', resultsContainer, modal);
+    modal.dataset.initialized = 'true';
+}
+
+function renderGlobalSearchResults(term, resultsContainer, modal) {
+    resultsContainer.innerHTML = '';
+
+    if (!term) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'global-search-placeholder';
+        placeholder.textContent = 'Start typing to search across every note.';
+        resultsContainer.appendChild(placeholder);
+        return;
+    }
+
+    const results = buildGlobalSearchMatches(term);
+    if (!results.length) {
+        const empty = document.createElement('div');
+        empty.className = 'global-search-empty';
+        empty.textContent = 'No matches found in your notes.';
+        resultsContainer.appendChild(empty);
+        return;
+    }
+
+    const count = document.createElement('p');
+    count.className = 'global-search-count';
+    count.textContent = `${results.length} match${results.length === 1 ? '' : 'es'} found`;
+    resultsContainer.appendChild(count);
+
+    results.forEach(result => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'global-search-result';
+        item.dataset.phase = result.phase;
+        item.dataset.matchIndex = `${result.matchIndex}`;
+
+        const title = document.createElement('div');
+        title.className = 'global-search-result-title';
+        title.textContent = formatPhaseLabel(result.phase);
+
+        const meta = document.createElement('div');
+        meta.className = 'global-search-result-meta';
+        meta.textContent = `Match ${result.matchIndex + 1}`;
+
+        const snippet = document.createElement('div');
+        snippet.className = 'global-search-result-snippet';
+        appendHighlightedSnippetLines(snippet, result.lines, term, result.matchLineIndex, result.prefix, result.suffix);
+
+        item.append(title, meta, snippet);
+        item.addEventListener('click', () => {
+            jumpToGlobalSearchMatch(result.phase, term, result.matchIndex);
+        });
+
+        resultsContainer.appendChild(item);
+    });
+}
+
+function buildGlobalSearchMatches(term) {
+    const results = [];
+    const needle = term.toLowerCase();
+
+    Object.entries(phases).forEach(([phase, content]) => {
+        const text = phaseTextIndex[phase] || extractPlainTextFromMarkdown(content);
+        phaseTextIndex[phase] = text;
+        const lines = text.split('\n');
+        let matchIndex = 0;
+
+        lines.forEach((line, lineIndex) => {
+            if (!needle) {
+                return;
+            }
+            if (!line.toLowerCase().includes(needle)) {
+                return;
+            }
+            const snippet = buildSearchSnippetLines(lines, lineIndex);
+            results.push({
+                phase,
+                matchIndex,
+                lines: snippet.lines,
+                matchLineIndex: snippet.matchLineIndex,
+                prefix: snippet.prefix,
+                suffix: snippet.suffix
+            });
+            matchIndex += 1;
+        });
+    });
+
+    return results;
+}
+
+function buildSearchSnippetLines(lines, matchLineIndex) {
+    const start = Math.max(0, matchLineIndex - 2);
+    const end = Math.min(lines.length - 1, matchLineIndex + 2);
+    const snippetLines = lines.slice(start, end + 1);
+
+    return {
+        lines: snippetLines.map(line => line.replace(/\s+$/g, '')),
+        matchLineIndex: matchLineIndex - start,
+        prefix: start > 0,
+        suffix: end < lines.length - 1
+    };
+}
+
+function appendHighlightedSnippetLines(container, lines, term, matchLineIndex, prefix, suffix) {
+    const lowerTerm = term.toLowerCase();
+
+    if (prefix) {
+        const ellipsis = document.createElement('div');
+        ellipsis.className = 'global-search-snippet-ellipsis';
+        ellipsis.textContent = '...';
+        container.appendChild(ellipsis);
+    }
+
+    lines.forEach((line, index) => {
+        const lineEl = document.createElement('div');
+        lineEl.className = 'global-search-snippet-line';
+        const lowerLine = line.toLowerCase();
+        const matchIndex = lowerLine.indexOf(lowerTerm);
+        if (matchIndex === -1) {
+            lineEl.textContent = line;
+        } else {
+            const before = line.slice(0, matchIndex);
+            const matchText = line.slice(matchIndex, matchIndex + term.length);
+            const after = line.slice(matchIndex + term.length);
+            lineEl.appendChild(document.createTextNode(before));
+            const highlight = document.createElement('span');
+            highlight.className = 'global-search-match';
+            highlight.textContent = matchText;
+            lineEl.appendChild(highlight);
+            lineEl.appendChild(document.createTextNode(after));
+        }
+        container.appendChild(lineEl);
+    });
+
+    if (suffix) {
+        const ellipsis = document.createElement('div');
+        ellipsis.className = 'global-search-snippet-ellipsis';
+        ellipsis.textContent = '...';
+        container.appendChild(ellipsis);
+    }
+}
+
+function formatPhaseLabel(phase) {
+    return phase.replace('notes/', '').replace('.md', '');
+}
+
+function jumpToGlobalSearchMatch(phase, term, matchIndex) {
+    if (!phase || !phases[phase]) {
+        return;
+    }
+
+    document.querySelectorAll('.phase-btn').forEach(button => {
+        button.classList.toggle('active', button.dataset.phase === phase);
+    });
+
+    currentPhase = phase;
+    checkboxStates.clear();
+    loadPhase(phase);
+
+    requestAnimationFrame(() => {
+        const found = highlightGlobalSearchMatch(term, matchIndex);
+        if (!found) {
+            resetContentScroll();
+        }
+    });
+}
+
+function highlightGlobalSearchMatch(term, matchIndex) {
+    if (!term) {
+        return false;
+    }
+
+    const contentArea = document.getElementById('contentArea');
+    if (!contentArea) {
+        return false;
+    }
+
+    clearGlobalSearchHighlights();
+
+    const lowerTerm = term.toLowerCase();
+    const walker = document.createTreeWalker(contentArea, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+            if (!node.nodeValue) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            if (node.parentElement && node.parentElement.closest('script, style')) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+        }
+    });
+
+    let node = walker.nextNode();
+    let count = 0;
+
+    while (node) {
+        const text = node.nodeValue;
+        const lowerText = text.toLowerCase();
+        let index = 0;
+
+        while ((index = lowerText.indexOf(lowerTerm, index)) !== -1) {
+            if (count === matchIndex) {
+                const matchNode = wrapTextMatch(node, index, index + term.length);
+                if (matchNode) {
+                    matchNode.classList.add('global-search-hit-active');
+                    matchNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return true;
+                }
+            }
+            count += 1;
+            index += lowerTerm.length;
+        }
+
+        node = walker.nextNode();
+    }
+
+    return false;
+}
+
+function wrapTextMatch(node, start, end) {
+    const text = node.nodeValue || '';
+    const parent = node.parentNode;
+    if (!parent) {
+        return null;
+    }
+
+    const beforeText = text.slice(0, start);
+    const matchText = text.slice(start, end);
+    const afterText = text.slice(end);
+
+    const beforeNode = document.createTextNode(beforeText);
+    const matchNode = document.createElement('span');
+    matchNode.className = 'global-search-hit';
+    matchNode.textContent = matchText;
+    const afterNode = document.createTextNode(afterText);
+
+    parent.insertBefore(beforeNode, node);
+    parent.insertBefore(matchNode, node);
+    parent.insertBefore(afterNode, node);
+    parent.removeChild(node);
+
+    return matchNode;
+}
+
+function clearGlobalSearchHighlights() {
+    document.querySelectorAll('.global-search-hit').forEach(hit => {
+        const parent = hit.parentNode;
+        if (!parent) {
+            return;
+        }
+        parent.replaceChild(document.createTextNode(hit.textContent || ''), hit);
+        parent.normalize();
+    });
 }

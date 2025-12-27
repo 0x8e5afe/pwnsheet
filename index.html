@@ -25,6 +25,9 @@
                     <button class="header-icon-btn" id="toolsBtn" type="button" aria-label="Open pentest tools list" title="Tools & wordlists">
                         <i class="bi bi-tools" aria-hidden="true"></i>
                     </button>
+                    <button class="header-icon-btn" id="globalSearchBtn" type="button" aria-label="Search all notes" title="Global search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <div class="download-group">
                     <button class="header-icon-btn download-kit-btn" id="downloadKitBtn" type="button" aria-label="Download pentest notes skeleton" title="Download notes skeleton">
@@ -452,6 +455,29 @@
     </div>
 </div>
 
+<div class="pwn-modal" id="globalSearchModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="pwn-modal-backdrop" data-close-modal></div>
+    <div class="pwn-modal-card global-search-card" role="document">
+        <div class="pwn-modal-header">
+            <div>
+                <p class="pwn-modal-eyebrow">Global Search</p>
+                <h2>Search all notes</h2>
+                <p class="pwn-modal-subtitle">Find matches across every phase and jump straight to them.</p>
+            </div>
+            <button class="pwn-modal-close" type="button" data-close-modal aria-label="Close global search">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="pwn-modal-body">
+            <label class="modal-field global-search-field">
+                <span>Search term</span>
+                <input type="text" id="globalSearchInput" placeholder="Type to search every note..." autocomplete="off">
+            </label>
+            <div class="global-search-results" id="globalSearchResults"></div>
+        </div>
+    </div>
+</div>
+
 <div class="reset-toast" id="resetToast" role="alert">Playbook reset successfully</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
@@ -460,7 +486,7 @@
 <script src="scripts/utils.js?v=2"></script>
 <script src="scripts/copy.js?v=2"></script>
 <script src="scripts/modals.js?v=2"></script>
-<script src="scripts/content.js?v=2"></script>
-<script src="scripts/main.js?v=2"></script>
+<script src="scripts/content.js?v=3"></script>
+<script src="scripts/main.js?v=3"></script>
 </body>
 </html>

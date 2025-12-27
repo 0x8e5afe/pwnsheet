@@ -80,4 +80,7 @@ function setupEventListeners() {
     setupTransferModal();
     setupReverseShellModal();
     setupToolsTable();
+    if (typeof setupGlobalSearchModal === 'function') {
+        setupGlobalSearchModal();
+    }
 }
