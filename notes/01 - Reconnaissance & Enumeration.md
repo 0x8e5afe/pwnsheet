@@ -51,8 +51,9 @@ Build a complete, repeatable picture of each target: live hosts, open ports, ser
 - [ ] Fingerprint web stack → [4.1](#41-initial-fingerprinting)
 - [ ] Find dirs/endpoints → [4.2](#42-directory-and-endpoint-discovery)
 - [ ] Check special files/backups → [4.3](#43-special-files-and-backups)
-- [ ] Identify CMS + targeted scan → [4.4](#44-cms-scanning)
-- [ ] Web vuln scan + validate → [4.5](#45-web-vulnerability-scanning)
+- [ ] Downloaded file & artifact triage → [4.4](#44-downloaded-file--artifact-triage)
+- [ ] Identify CMS + targeted scan → [4.5](#45-cms-scanning)
+- [ ] Web vuln scan + validate → [4.6](#46-web-vulnerability-scanning)
 
 ### SMB/NetBIOS Enumeration
 
