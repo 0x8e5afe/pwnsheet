@@ -29,110 +29,109 @@ Build a complete, repeatable picture of each target: live hosts, open ports, ser
 
 ### Host Discovery
 
-- [ ] **Host discovery (ICMP/ARP/TCP)** → [1.1](#11-icmp-sweeparp-discoverytcp-ping)
-- [ ] **Confirm VM reachability** → [1.2](#12-reachability-confirmation)
-- [ ] **Analyze network patterns** → [1.3](#13-network-pattern-analysis)
+- [ ] Host discovery (ICMP/ARP/TCP) → [1.1](#11-icmp-sweeparp-discoverytcp-ping)
+- [ ] Confirm VM reachability → [1.2](#12-reachability-confirmation)
+- [ ] Analyze network patterns → [1.3](#13-network-pattern-analysis)
 
 ### Port Scanning
 
-- [ ] **Full TCP scan (scripts/versions)** → [2.1](#21-full-tcp-scan-mandatory-per-host)
-- [ ] **Essential UDP scan** → [2.2](#22-udp-scan-essential)
-- [ ] **Save results per host** → [2.3](#23-saving-results)
-- [ ] **Vuln scan + triage** → [2.4](#24-vulnerability-scanning)
+- [ ] Full TCP scan (scripts/versions) → [2.1](#21-full-tcp-scan-mandatory-per-host)
+- [ ] Essential UDP scan → [2.2](#22-udp-scan-essential)
+- [ ] Vulnerability Scanning with Nmap → [2.3](#23-vulnerability-scanning)
 
 ### Service Enumeration
 
-- [ ] **Grab service banners** → [3.1](#31-manual-banner-grabbing)
-- [ ] **Confirm service versions** → [3.2](#32-version-confirmation)
-- [ ] **Check for weak/default configs** → [3.3](#33-baseline-checks-by-service)
+- [ ] Grab service banners → [3.1](#31-manual-banner-grabbing)
+- [ ] Confirm service versions → [3.2](#32-version-confirmation)
+- [ ] Check for weak/default configs → [3.3](#33-baseline-checks-by-service)
+- [ ] TLS/SSL enumeration → [3.4](#34-tlsssl-enumeration)
 
 ### Web Reconnaissance
 
-- [ ] **Fingerprint web stack** → [4.1](#41-initial-fingerprinting)
-- [ ] **Find dirs/endpoints (multi-tool)** → [4.2](#42-directory-endpoint-discovery)
-- [ ] **Check special files/backups** → [4.3](#43-special-files-and-backups)
-- [ ] **Map web attack surface** → [4.4](#44-attack-surface-mapping)
-- [ ] **Identify CMS + targeted scan** → [4.5](#45-cms-scanning)
-- [ ] **Web vuln scan + validate** → [4.6](#46-web-vulnerability-scanning)
+- [ ] Fingerprint web stack → [4.1](#41-initial-fingerprinting)
+- [ ] Find dirs/endpoints → [4.2](#42-directory-and-endpoint-discovery)
+- [ ] Check special files/backups → [4.3](#43-special-files-and-backups)
+- [ ] Identify CMS + targeted scan → [4.4](#44-cms-scanning)
+- [ ] Web vuln scan + validate → [4.5](#45-web-vulnerability-scanning)
 
 ### SMB/NetBIOS Enumeration
 
-- [ ] **List shares (anon/auth)** → [5.1](#51-share-listing)
-- [ ] **Review perms + content sweep** → [5.2](#52-permissions-and-content-sweep)
-- [ ] **Collect OS/users/groups/domain** → [5.3](#53-usersgroupsos)
-- [ ] **Run NetExec/CME checks** → [5.4](#54-netexeccrackmapexec-enumeration)
-- [ ] **Check SMB weaknesses/issues** → [5.5](#55-smb-vulnerability-checks)
+- [ ] List shares (anon/auth) → [5.1](#51-share-listing)
+- [ ] Review perms + content sweep → [5.2](#52-permissions-and-content-sweep)
+- [ ] Collect OS/users/groups/domain → [5.3](#53-usersgroupsos)
+- [ ] Run NetExec/CME checks → [5.4](#54-netexeccrackmapexec-enumeration)
+- [ ] Check SMB weaknesses/issues → [5.5](#55-smb-vulnerability-checks)
 
 ### NFS
 
-- [ ] **Find RPC/NFS + exports** → [6.1](#61-detect-rpcnfs-and-list-exports)
-- [ ] **Verify mountable exports** → [6.2](#62-mount-shares-and-verify-access)
-- [ ] **Mount + hunt sensitive data** → [6.3](#63-search-for-sensitive-data)
-- [ ] **Review export options (no_root_squash)** → [6.4](#64-no_root_squash-export-misconfig-checks)
+- [ ] Find RPC/NFS + exports → [6.1](#61-detect-rpcnfs-and-list-exports)
+- [ ] Verify mountable exports → [6.2](#62-mount-shares-and-verify-access)
+- [ ] Mount + hunt sensitive data → [6.3](#63-search-for-sensitive-data)
+- [ ] Review export options (no_root_squash) → [6.4](#64-no_root_squash-export-misconfig-checks)
 
 ### LDAP/Directory Services Discovery
 
-- [ ] **Query RootDSE + contexts** → [7.1](#71-rootdse-and-naming-contexts)
-- [ ] **Enumerate directory objects** → [7.2](#72-users-groups-computers)
-- [ ] **Confirm DCs and roles** → [7.3](#73-dc-domain-role-confirmation)
+- [ ] Query RootDSE + contexts → [7.1](#71-rootdse-and-naming-contexts)
+- [ ] Enumerate directory objects → [7.2](#72-enumerate-directory-objects)
+- [ ] Confirm DCs and roles → [7.3](#73-confirm-dcs-and-roles)
 
 ### SNMP
 
-- [ ] **Find community strings** → [8.1](#81-community-discovery)
-- [ ] **Walk key OIDs** → [8.2](#82-walk-important-oids)
+- [ ] Find community strings → [8.1](#81-community-discovery)
+- [ ] Walk key OIDs → [8.2](#82-walk-important-oids)
 
 ### DNS
 
-- [ ] **Attempt zone transfers (AXFR)** → [9.1](#91-zone-transfers)
-- [ ] **Enumerate subdomains + resolve** → [9.2](#92-subdomain-enumeration)
-- [ ] **Sweep core records (NS/SOA/MX/TXT)** → [9.3](#93-record-sweep)
+- [ ] Attempt zone transfers (AXFR) → [9.1](#91-zone-transfers)
+- [ ] Enumerate subdomains + resolve → [9.2](#92-subdomain-enumeration)
+- [ ] Sweep core records (NS/SOA/MX/TXT) → [9.3](#93-record-sweep)
 
 ### FTP
 
-- [ ] **Test anonymous login** → [10.1](#101-anonymous-login-check)
-- [ ] **Capture version + assess vulns** → [10.2](#102-version-and-vulnerability-check)
-- [ ] **Enumerate/download accessible files** → [10.3](#103-file-enumeration)
+- [ ] Test anonymous login → [10.1](#101-anonymous-login-check)
+- [ ] Capture version + assess vulns → [10.2](#102-version-and-vulnerability-check)
+- [ ] Enumerate/download accessible files → [10.3](#103-file-enumeration)
 
 ### SSH
 
-- [ ] **Enumerate version + algorithms** → [11.1](#111-version-and-algorithm-enumeration)
-- [ ] **Identify auth methods/policy** → [11.2](#112-authentication-methods)
-- [ ] **Assess brute-force risk (in-scope)** → [11.3](#113-brute-force-if-applicable)
+- [ ] Enumerate version + algorithms → [11.1](#111-version-and-algorithm-enumeration)
+- [ ] Identify auth methods/policy → [11.2](#112-authentication-methods)
+- [ ] Assess brute-force risk (in-scope) → [11.3](#113-brute-force-if-applicable)
 
 ### SMTP
 
-- [ ] **Test user enum (VRFY/EXPN/RCPT)** → [12.1](#121-user-enumeration)
-- [ ] **Check open relay/misconfig** → [12.2](#122-open-relay-check)
+- [ ] Test user enum (VRFY/EXPN/RCPT) → [12.1](#121-user-enumeration)
+- [ ] Check open relay/misconfig → [12.2](#122-open-relay-check)
 
 ### POP3/IMAP
 
-- [ ] **Capture banners/capabilities** → [13.1](#131-banner-and-capabilities)
-- [ ] **Assess auth + enum exposure** → [13.2](#132-authentication-and-enumeration)
+- [ ] Capture banners/capabilities → [13.1](#131-banner-and-capabilities)
+- [ ] Assess auth + enum exposure → [13.2](#132-authentication-and-enumeration)
 
 ### RPC
 
-- [ ] **Enumerate RPC services/interfaces** → [14.1](#141-rpc-service-enumeration)
-- [ ] **RPC client enumeration** → [14.2](#142-rpc-client-enumeration)
+- [ ] Enumerate RPC services/interfaces → [14.1](#141-rpc-service-enumeration)
+- [ ] RPC client enumeration → [14.2](#142-rpc-client-enumeration)
 
 ### Databases
 
-- [ ] **Enumerate MSSQL posture** → [15.1](#151-mssql-enumeration)
-- [ ] **Enumerate MySQL posture** → [15.2](#152-mysql-enumeration)
-- [ ] **Enumerate PostgreSQL posture** → [15.3](#153-postgresql-enumeration)
+- [ ] Enumerate MSSQL posture → [15.1](#151-mssql-enumeration)
+- [ ] Enumerate MySQL posture → [15.2](#152-mysql-enumeration)
+- [ ] Enumerate PostgreSQL posture → [15.3](#153-postgresql-enumeration)
 
 ### RDP/VNC
 
-- [ ] **Enumerate RDP config/capabilities** → [16.1](#161-rdp-enumeration)
-- [ ] **Enumerate VNC auth/posture** → [16.2](#162-vnc-enumeration)
+- [ ] Enumerate RDP config/capabilities → [16.1](#161-rdp-enumeration)
+- [ ] Enumerate VNC auth/posture → [16.2](#162-vnc-enumeration)
 
 ### Active Directory
 
-- [ ] **Enumerate domain + trusts** → [17.1](#171-domain-enumeration)
-- [ ] **Enumerate users/groups** → [17.2](#172-user-and-group-enumeration)
-- [ ] **Assess Kerberos exposure** → [17.3](#173-kerberos-enumeration)
-- [ ] **Enumerate shares/files** → [17.4](#174-share-enumeration)
-- [ ] **BloodHound analysis** → [17.5](#175-bloodhound--sharphound)
-- [ ] **Extract credentials** → [17.6](#176-credential-dumping)
+- [ ] Enumerate domain + trusts → [17.1](#171-domain-enumeration)
+- [ ] Enumerate users/groups → [17.2](#172-user-and-group-enumeration)
+- [ ] Assess Kerberos exposure → [17.3](#173-kerberos-enumeration)
+- [ ] Enumerate shares/files → [17.4](#174-share-enumeration)
+- [ ] BloodHound analysis → [17.5](#175-bloodhound--sharphound)
+- [ ] Extract credentials → [17.6](#176-credential-dumping)
 
 ---
 
@@ -141,6 +140,9 @@ Build a complete, repeatable picture of each target: live hosts, open ports, ser
 ### Essential One-Liners
 
 ```bash
+# Comprensive NMAP on ALL ports
+RHOST="<RHOST>"; sudo nmap -Pn -sS -p- --min-rate 10000 -v "$RHOST" -oA "nmap_fast_tcp_${RHOST}" -oG - | awk -F'Ports: ' 'BEGIN{c=0} /Ports: /{n=split($2,a,", "); for(i=1;i<=n;i++){split(a[i],p,"/"); if(p[2]=="open" && p[3]=="tcp"){printf "%s%s",(c++?",":""),p[1]}}} END{print ""}' | tee tcp_ports.txt | xargs -r -I{} sudo nmap -sC -sV -p {} "$RHOST" -oA "nmap_detailed_tcp_${RHOST}"
+
 # Fast TCP scan all ports
 sudo nmap -Pn -sS -p- --min-rate 10000 <RHOST>
 
@@ -157,7 +159,7 @@ smbclient -L //<RHOST> -N && enum4linux -a <RHOST>
 ldapsearch -x -H ldap://<RHOST> -s base
 
 # Web directory brute
-gobuster dir -u http://<RHOST>/ -w /usr/share/wordlists/dirb/common.txt -x php,txt,html
+gobuster dir -u <HTTP_PROTOCOL>://<RHOST>/ -w /usr/share/wordlists/dirb/common.txt -x php,txt,html
 
 # SNMP walk
 snmpwalk -v2c -c public <RHOST>
@@ -241,50 +243,11 @@ which nxc netexec crackmapexec
 ## Environment Setup
 
 ```bash
-# Create working directory structure
-mkdir -p ~/exam/{enum,findings,vulns}
-cd ~/exam
 
 # Add to /etc/hosts if needed
 echo "<RHOST> <HOSTNAME>" | sudo tee -a /etc/hosts
 ```
 
----
-
-## Common Wordlists Reference
-
-```bash
-# Directories / files
-/usr/share/wordlists/dirb/common.txt
-/usr/share/wordlists/dirb/big.txt
-/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt
-/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
-/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-big.txt
-/usr/share/seclists/Discovery/Web-Content/raft-small-directories.txt
-/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt
-/usr/share/seclists/Discovery/Web-Content/raft-small-files.txt
-/usr/share/seclists/Discovery/Web-Content/raft-medium-files.txt
-
-# URL parameters
-/usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt
-/usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
-
-# DNS/Subdomains
-/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt
-/usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt
-
-# Usernames
-/usr/share/seclists/Usernames/Names/names.txt
-/usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
-
-# Passwords
-/usr/share/wordlists/rockyou.txt
-/usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt
-
-# SNMP
-/usr/share/seclists/Discovery/SNMP/common-snmp-community-strings.txt
-/usr/share/seclists/Discovery/SNMP/snmp-onesixtyone.txt
-```
 --- 
 
 ## 1. Host Discovery (per subnet)
@@ -486,22 +449,7 @@ sudo nmap -sU -p 53,67,68,69,123,161,162,500,514,520,623,624,631,1900,4500,5353 
 sudo nmap -sU -sV -p 53,69,123,161,500 <RHOST> -oA nmap_udp_services_<RHOST>
 ```
 
-### 2.3 Saving results
-
-Create organized folder structure:
-
-```bash
-# Create organized recon directory structure for the host
-mkdir -p recon/<RHOST>/{nmap,web,smb,notes}
-
-# Move all scan files for this host into the Nmap directory
-mv *<RHOST>* recon/<RHOST>/nmap/
-
-# Copy host and port lists into the host recon directory
-cp live_hosts.txt tcp_ports.txt recon/<RHOST>/
-```
-
-### 2.4 Vulnerability scanning
+### 2.3 Vulnerability scanning
 
 ```bash
 # Run Nmap vulnerability scripts against all discovered services
@@ -517,7 +465,7 @@ sudo nmap --script ssl-heartbleed -p 443 <RHOST>
 nuclei -ut
 
 # Run Nuclei scanner against HTTP target
-nuclei -target http://<RHOST> -o nuclei_<RHOST>.txt
+nuclei -target <HTTP_PROTOCOL>://<RHOST> -o nuclei_<RHOST>.txt
 ```
 
 ---
@@ -530,19 +478,19 @@ For each open port, grab manual banners even if Nmap detected them:
 
 ```bash
 # Raw TCP banner grab
-nc -nv <RHOST> <PORT>
+nc -nv <RHOST> <RPORT>
 
 # HTTP banner 
-echo -e "HEAD / HTTP/1.0\r\n\r\n" | nc -nv <RHOST> 80
-curl -I http://<RHOST>/
-curl -s http://<RHOST>/ | head -50
+echo -e "HEAD / HTTP/1.0\r\n\r\n" | nc -nv <RHOST> <RPORT>
+curl -I <HTTP_PROTOCOL>://<RHOST>/
+curl -s <HTTP_PROTOCOL>://<RHOST>/ | head -50
 curl -k -I https://<RHOST>/
 
 # Telnet for interactive services
-telnet <RHOST> <PORT>
+telnet <RHOST> <RPORT>
 
 # Verbose curl for headers (HTTP)
-curl -v http://<RHOST>/
+curl -v <HTTP_PROTOCOL>://<RHOST>/
 
 # Verbose curl for headers (HTTPS)
 curl -v -k https://<RHOST>/
@@ -555,7 +503,7 @@ curl -v -k https://<RHOST>/
 sudo nmap -sV --version-intensity 9 -p $(cat tcp_ports.txt) <RHOST> -oA nmap_versions_<RHOST>
 
 # Specific service scripts
-nmap -sV --script=banner -p <PORT> <RHOST>
+nmap -sV --script=banner -p <RPORT> <RHOST>
 ```
 
 ### 3.3 Baseline checks by service
@@ -636,23 +584,36 @@ Treat every HTTP(S) port as separate (80, 443, 8080, 8443, etc.).
 
 ```bash
 # Whatweb fingerprinting
-whatweb -a 3 http://<RHOST>:<PORT>/
-whatweb -a 4 http://<RHOST>:<PORT>/
-whatweb -a 3 https://<RHOST>:<PORT>/
+# Fingerprint tech stack (HTTP), agg=3
+whatweb -a 3 <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
+
+# Fingerprint tech stack (HTTP), agg=4 (noisier)
+whatweb -a 4 <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
+
+# Fingerprint tech stack (HTTPS), agg=3
+whatweb -a 3 https://<RHOST>:<RPORT>/
 
 # Headers and redirects
-curl -I http://<RHOST>:<PORT>/
-curl -k -I https://<RHOST>:<PORT>/
-curl -v http://<RHOST>:<PORT>/ 2>&1 | head -50
+# Show response headers (HTTP)
+curl -I <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
+
+# Show response headers (HTTPS, ignore cert)
+curl -k -I https://<RHOST>:<RPORT>/
+
+# Verbose HTTP exchange (trimmed)
+curl -v <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ 2>&1 | head -50
 
 # Nmap HTTP scripts
-nmap -p <PORT> --script http-headers,http-methods,http-title <RHOST>
-nmap -p80 --script=http-enum <RHOST>
+# Grab headers, methods, title on <RPORT>
+nmap -p <RPORT> --script http-headers,http-methods,http-title <RHOST>
+
+# Enumerate common web paths on port 80
+nmap -p<RPORT> --script=http-enum <RHOST>
 ```
 
 
 
-### 4.2 Directory / endpoint discovery
+### 4.2 Directory and endpoint discovery
 
 Run at least two tools to reduce blind spots.
 
@@ -660,18 +621,18 @@ Run at least two tools to reduce blind spots.
 
 ```bash
 # Directory enumeration
-gobuster dir -u http://<RHOST>:<PORT>/ \
+gobuster dir -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ \
   -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt \
   -x php,html,js,txt,bak,old,zip,sql \
-  -t 50 -o web_gobuster_dirs_<RHOST>_<PORT>.txt
+  -t 50 -o web_gobuster_dirs_<RHOST>_<RPORT>.txt
 
 # With common wordlist
-gobuster dir -u http://<RHOST>:<PORT>/ \
+gobuster dir -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ \
   -w /usr/share/wordlists/dirb/common.txt \
   -x php,html,txt -t 50 -o web_gobuster_common.txt
 
 # Ignore SSL errors
-gobuster dir -u https://<RHOST>:<PORT>/ \
+gobuster dir -u https://<RHOST>:<RPORT>/ \
   -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt \
   -k -t 50
 
@@ -685,13 +646,13 @@ gobuster dns -d <DOMAIN> \
 
 ```bash
 # Recursive directory enumeration
-feroxbuster -u http://<RHOST>:<PORT>/ \
+feroxbuster -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ \
   -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt \
   -x php,html,js,txt \
-  -C 404,403 -t 50 -o web_ferox_<RHOST>_<PORT>.txt
+  -C 404,403 -t 50 -o web_ferox_<RHOST>_<RPORT>.txt
 
 # Recursive directory enumeration with depth limit
-feroxbuster -u http://<RHOST>:<PORT>/ \
+feroxbuster -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ \
   -w /usr/share/wordlists/dirb/common.txt \
   --depth 3 -x php,txt,html
 ```
@@ -701,37 +662,37 @@ feroxbuster -u http://<RHOST>:<PORT>/ \
 ```bash
 # Basic directory fuzzing
 ffuf -w /usr/share/wordlists/dirb/common.txt \
-  -u http://<RHOST>:<PORT>/FUZZ \
-  -mc 200,204,301,302,307,401 -o ffuf_dirs_<RHOST>_<PORT>.txt
+  -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/FUZZ \
+  -mc 200,204,301,302,307,401 -o ffuf_dirs_<RHOST>_<RPORT>.txt
 
 # Basic directory fuzzing with extensions
 ffuf -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt \
-  -u http://<RHOST>:<PORT>/FUZZ \
+  -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/FUZZ \
   -e .php,.html,.txt,.bak,.zip,.log
 
 # Recursive scanning
 ffuf -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt \
-  -u http://<RHOST>:<PORT>/FUZZ -recursion
+  -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/FUZZ -recursion
 
 # VHost fuzzing
 ffuf -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt \
-  -u http://<RHOST>:<PORT>/ -H "Host: FUZZ.<DOMAIN>" -fs <BASE_SIZE>
+  -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -H "Host: FUZZ.<DOMAIN>" -fs <BASE_SIZE>
 
 # Parameter fuzzing
 ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt \
-  -u http://<RHOST>/page?FUZZ=test -mc 200
+  -u <HTTP_PROTOCOL>://<RHOST>/page?FUZZ=test -mc 200
 ```
 
 **Dirsearch:**
 
 ```bash
 # Basic directory fuzzing with custom wordlist and extensions
-dirsearch -u http://<RHOST>:<PORT>/ -x 403,404 \
+dirsearch -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -x 403,404 \
   -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt \
   -R 2 -e php,html,txt
 
 # Basic directory fuzzing with extensions and authentication
-dirsearch -u http://<RHOST>:<PORT>/ -x 403,400,404,401 \
+dirsearch -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -x 403,400,404,401 \
   -r -R 2 --auth=<USER>:<PASS> --auth-type=basic
 ```
 
@@ -739,113 +700,102 @@ dirsearch -u http://<RHOST>:<PORT>/ -x 403,400,404,401 \
 
 ```bash
 # Basic directory fuzzing
-dirb http://<RHOST>:<PORT>/ /usr/share/wordlists/dirb/common.txt
+dirb <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ /usr/share/wordlists/dirb/common.txt
 
 # Directory fuzzing with huge wordlist
-dirb http://<RHOST>:<PORT>/ /usr/share/dirb/wordlists/big.txt -o dirb_output.txt
+dirb <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ /usr/share/dirb/wordlists/big.txt -o dirb_output.txt
 ```
 
 ### 4.3 Special files and backups
 
 ```bash
-# Check common special files
+# Check standard site metadata and security files
 for file in robots.txt sitemap.xml crossdomain.xml .well-known/security.txt; do
-  echo "=== $file ===" && curl -s "http://<RHOST>:<PORT>/$file" | head -50
+  echo "=== $file ===" && curl -s "<HTTP_PROTOCOL>://<RHOST>:<RPORT>/$file" | head -50
 done
 
-# Check for backup files
-for ext in bak old tmp backup zip tar.gz sql; do
-  curl -s -o /dev/null -w "%{http_code}" "http://<RHOST>:<PORT>/index.$ext"
+# Scan for common index backups and sensitive configs
+for f in index.bak index.old index.zip config.php .env .htaccess web.config; do
+  curl -s -o /dev/null -w "%{http_code} | $f\n" "<HTTP_PROTOCOL>://<RHOST>:<RPORT>/$f"
 done
 
-# Git exposure check
-curl -s http://<RHOST>:<PORT>/.git/HEAD
-curl -s http://<RHOST>:<PORT>/.git/config
+# Verify exposure of VCS and OS metadata
+curl -s -I "<HTTP_PROTOCOL>://<RHOST>:<RPORT>/.git/HEAD"
+curl -s -I "<HTTP_PROTOCOL>://<RHOST>:<RPORT>/.svn/entries"
+curl -s -o /dev/null -w "DS_Store: %{http_code}\n" "<HTTP_PROTOCOL>://<RHOST>:<RPORT>/.DS_Store"
 
-# SVN exposure
-curl -s http://<RHOST>:<PORT>/.svn/entries
+# Reconstruct remote git repository locally
+git-dumper <HTTP_PROTOCOL>://<RHOST>:<RPORT>/.git/ ./dumped-repo
 
-# DS_Store (Mac)
-curl -s http://<RHOST>:<PORT>/.DS_Store
-
-# Common config files
-for f in config.php config.inc.php wp-config.php web.config .htaccess .env; do
-  curl -s -o /dev/null -w "$f: %{http_code}\n" "http://<RHOST>:<PORT>/$f"
+# Inspect commit history and latest changes
+cd dumped-repo
+git log --all --oneline
+git show HEAD
 done
 ```
 
-### 4.4 Attack surface mapping
-
-Document in host notes:
-
-- All auth endpoints (`/login`, `/admin`, `/manager`, `/wp-admin`, `/api/auth`)
-- Upload points (`/upload`, `/filemanager`, `/elfinder`)
-- Parameterized paths (`?id=`, `?page=`, `/item/123`)
-- API roots (`/api`, `/rest`, `/graphql`, `/v1`, `/v2`)
-- Distinct apps per vhost or port
-
-### 4.5 CMS scanning
+### 4.4 CMS scanning
 
 **WordPress:**
 
 ```bash
 # Basic enumeration
-wpscan --url http://<RHOST>/ --enumerate u,t,p
+wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ --enumerate u,t,p
 
 # Aggressive plugin detection
-wpscan --url http://<RHOST>/ --plugins-detection aggressive
+wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ --plugins-detection aggressive
 
 # Full enumeration with API token
-wpscan --url http://<RHOST>/ --enumerate vp,vt,tt,cb,dbe,u,m \
+wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ --enumerate vp,vt,tt,cb,dbe,u,m \
   --plugins-detection aggressive --plugins-version-detection aggressive
 
 # Brute force login
-wpscan --url http://<RHOST>/ -U <USERNAME> -P /usr/share/wordlists/rockyou.txt
+wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -U <USERNAME> -P /usr/share/wordlists/rockyou.txt
 
 # Ignore SSL errors
-wpscan --url https://<RHOST>/ --disable-tls-checks --enumerate u,t,p
+wpscan --url https://<RHOST>:<RPORT>/ --disable-tls-checks --enumerate u,t,p
 ```
 
 **Joomla:**
 
 ```bash
 # Basic Joomla scan against the target
-joomscan -u http://<RHOST>/
+joomscan -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
 
 # Joomla scan with component enumeration
-joomscan --ec -u http://<RHOST>/
+joomscan --ec -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
 ```
 
 **Drupal:**
 
 ```bash
 # Droopescan
-droopescan scan drupal -u http://<RHOST>/
+droopescan scan drupal -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
 ```
 
 **General CMS:**
 
 ```bash
 # CMSmap tries to identify the CMS (WordPress, Joomla, Drupal, etc.)
-cmsmap -F -d http://<RHOST>/
+cmsmap -F -d <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
 ```
 
-### 4.6 Web vulnerability scanning
+### 4.5 Web vulnerability scanning
 
 **Nikto:**
 
 ```bash
 # Nikto scan against the specified HTTP service
-nikto -h http://<RHOST>:<PORT>/
+nikto -h <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
 
 # Nikto with max scan time and text output
-nikto -h http://<RHOST>:<PORT>/ -maxtime 30m -o nikto_<RHOST>.txt
+nikto -h <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -maxtime 30m -o nikto_<RHOST>.txt
 
 # Nikto with tuning and HTML report
-nikto -h http://<RHOST>:<PORT>/ -Tuning 123bde -o report.html -Format htm
+nikto -h <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -Tuning 123bde -o report.html -Format htm
 
 # Through proxy
-nikto -useproxy http://<PROXY_IP>:3128 -h http://<RHOST>/
+nikto -useproxy <HTTP_PROTOCOL>://<PROXY_IP>:3128 -h <HTTP_PROTOCOL>://<RHOST>:<RPORT>/
 ```
 
 ---
@@ -1172,7 +1122,7 @@ nmap -p 389,636 --script ldap-rootdse <RHOST>
 nmap -p 389,636 --script ldap-search <RHOST>
 ```
 
-### 7.2 Users / groups / computers
+### 7.2 Enumerate directory objects
 
 Adjust base DN from naming contexts discovered above.
 
@@ -1211,7 +1161,7 @@ ldapdomaindump -u '<DOMAIN>\<USER>' -p '<PASS>' <RHOST>
 ldapdomaindump -u '<DOMAIN>\<USER>' -p '<PASS>' ldap://<RHOST>
 ```
 
-### 7.3 DC / domain role confirmation
+### 7.3 Confirm DCs and roles
 
 Look for:
 
@@ -1361,7 +1311,7 @@ fierce --domain <DOMAIN>
 fierce --domain <DOMAIN> --dns-servers <DNS_SERVER>
 
 # Wfuzz DNS fuzzing
-wfuzz -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u "http://<DOMAIN>" -H "Host: FUZZ.<DOMAIN>" --hc 404
+wfuzz -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u "<HTTP_PROTOCOL>://<DOMAIN>" -H "Host: FUZZ.<DOMAIN>" --hc 404
 ```
 
 **OSINT/passive:**
@@ -1751,7 +1701,7 @@ hydra -s 5900 -P /usr/share/wordlists/rockyou.txt vnc://<RHOST>
 ```
 
 ---
-## 17 Active Directory Enumeration
+### 17 Active Directory Enumeration
 
 ### 17.1 Domain Enumeration
 
@@ -1923,12 +1873,17 @@ Get-ChildItem -Path "\\<HOSTNAME>\<SHARE>" -Recurse -Include *.txt,*.xml,*.confi
 
 #### Linux - BloodHound Python
 ```bash
-# All collection
-bloodhound-python -c All -u '' -p '' -d  -dc  -ns 
-# DC only (faster)
-bloodhound-python -c DCOnly -u '' -p '' -d  -dc  -ns 
-# Specific collections
-bloodhound-python -c Group,LocalAdmin,Session,Trusts -u '' -p '' -d  -ns 
+# Standard auth - full collection
+bloodhound-python -c All -u <USER> -p <PASS> -d <DOMAIN> -dc <DC_HOSTNAME> -ns <DNS_IP>
+
+# Kerberos auth (requires -k and env var)
+bloodhound-python -c All -u <USER> -p '' -k -d <DOMAIN> -dc <DC_HOSTNAME> -ns <DNS_IP>
+
+# DC only - faster and stealthier
+bloodhound-python -c DCOnly -u <USER> -p <PASS> -d <DOMAIN> -dc <DC_HOSTNAME> -ns <DNS_IP>
+
+# Specific collection methods
+bloodhound-python -c Group,LocalAdmin,Session,Trusts -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
 ```
 
 #### Windows - SharpHound

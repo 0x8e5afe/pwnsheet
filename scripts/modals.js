@@ -74,7 +74,9 @@ function openModal(modal) {
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
 
-    const focusTarget = modal.querySelector('input, select, button');
+    const focusTarget = modal.querySelector(
+        '.pwn-modal-body input, .pwn-modal-body select, .pwn-modal-body textarea, .pwn-modal-body button'
+    );
     if (focusTarget) {
         focusTarget.focus();
     }

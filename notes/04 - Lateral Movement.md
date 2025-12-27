@@ -20,46 +20,46 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 
 ### Strategy & Visualization
 
-- [ ] **Visualize Nodes & Edges** → [1.1](#11-network-visualization-concept)
-- [ ] **Identify High-Value Targets** → [1.2](#12-high-value-target-prioritization)
+- [ ] Visualize Nodes & Edges → [1.1](#11-network-visualization-concept)
+- [ ] Identify High-Value Targets → [1.2](#12-high-value-target-prioritization)
 
 ### Windows Movement
-- [ ] **PSExec/SMB Exec** → [2.1](#21-psexec-style-execution)
-- [ ] **WMI Lateral Move** → [2.2](#22-wmi-based-movement)
-- [ ] **WinRM/PS Remoting** → [2.3](#23-winrm-and-powershell-remoting)
-- [ ] **RDP Access** → [2.4](#24-rdp-remote-desktop)
-- [ ] **Service Execution** → [2.5](#25-service-based-execution)
+- [ ] PSExec/SMB Exec → [2.1](#21-psexec-style-execution)
+- [ ] WMI Lateral Move → [2.2](#22-wmi-based-movement)
+- [ ] WinRM/PS Remoting → [2.3](#23-winrm-and-powershell-remoting)
+- [ ] RDP Access → [2.4](#24-rdp-remote-desktop)
+- [ ] Service Execution → [2.5](#25-service-based-execution)
 
 ### Linux Movement
-- [ ] **SSH Access/Keys** → [3.1](#31-ssh-access)
-- [ ] **Pivoting** → [3.2](#32-pivoting)
-- [ ] **Harvest SSH Keys** → [3.3](#33-ssh-key-harvesting)
-- [ ] **SSH Agent Hijack** → [3.3](#33-ssh-key-harvesting)
+- [ ] SSH Access/Keys → [3.1](#31-ssh-access)
+- [ ] Pivoting → [3.2](#32-pivoting)
+- [ ] Harvest SSH Keys → [3.3](#33-ssh-key-harvesting)
+- [ ] SSH Agent Hijack → [3.3](#33-ssh-key-harvesting)
 
 ### Credential Ops
-- [ ] **Inventory Creds** → [4.1](#41-credential-inventory-management)
-- [ ] **SMB/WinRM Spray** → [4.2](#42-targeted-password-spraying)
-- [ ] **SSH/RDP Spray** → [4.2](#42-targeted-password-spraying)
-- [ ] **Check Safety/Lockout** → [4.3](#43-spraying-safety-measures)
+- [ ] Inventory Creds → [4.1](#41-credential-inventory-management)
+- [ ] SMB/WinRM Spray → [4.2](#42-targeted-password-spraying)
+- [ ] SSH/RDP Spray → [4.2](#42-targeted-password-spraying)
+- [ ] Check Safety/Lockout → [4.3](#43-spraying-safety-measures)
 
 ### AD-Specific Movement
-- [ ] **Pass-the-Hash (PtH)** → [5.1](#51-pass-the-hash-pth-strategy)
-- [ ] **Pass-the-Ticket (PtT)** → [5.2](#52-pass-the-ticket-ptt-movement)
-- [ ] **Golden/Silver Ticket** → [5.2](#52-pass-the-ticket-ptt-movement)
-- [ ] **Hunt Admin Sessions** → [5.3](#53-admin-session-exploitation)
-- [ ] **Dump LSASS/Secrets** → [5.3](#53-admin-session-exploitation)
+- [ ] Pass-the-Hash (PtH) → [5.1](#51-pass-the-hash-pth-strategy)
+- [ ] Pass-the-Ticket (PtT) → [5.2](#52-pass-the-ticket-ptt-movement)
+- [ ] Golden/Silver Ticket → [5.2](#52-pass-the-ticket-ptt-movement)
+- [ ] Hunt Admin Sessions → [5.3](#53-admin-session-exploitation)
+- [ ] Dump LSASS/Secrets → [5.3](#53-admin-session-exploitation)
 
 ### Attack Path Analysis
-- [ ] **Run BloodHound** → [5.4](#54-bloodhound-informed-movement)
-- [ ] **Map Shortest Paths** → [5.4](#54-bloodhound-informed-movement)
-- [ ] **Target ACLs/GPOs** → [5.4](#54-bloodhound-informed-movement)
+- [ ] Run BloodHound → [5.4](#54-bloodhound-informed-movement)
+- [ ] Map Shortest Paths → [5.4](#54-bloodhound-informed-movement)
+- [ ] Target ACLs/GPOs → [5.4](#54-bloodhound-informed-movement)
 
 ### Pivoting & Tunneling
-- [ ] **Ligolo-ng Setup** → [6.1](#61-ligolo-ng-setup)
-- [ ] **Proxy/Agent Live** → [6.2](#62-ligolo-ng-basic-flow)
-- [ ] **Routes & Listeners** → [6.3](#63-routing--port-forwarding)
-- [ ] **Multi-Hop Ready** → [6.4](#64-multi-hop-pivoting)
-- [ ] **SSH/Chisel Fallbacks** → [6.5](#65-ssh--chisel-quick-hits)
+- [ ] Ligolo-ng Setup → [6.1](#61-ligolo-ng-setup)
+- [ ] Proxy/Agent Live → [6.2](#62-ligolo-ng-basic-flow)
+- [ ] Routes & Listeners → [6.3](#63-routing--port-forwarding)
+- [ ] Multi-Hop Ready → [6.4](#64-multi-hop-pivoting)
+- [ ] SSH/Chisel Fallbacks → [6.5](#65-ssh--chisel-quick-hits)
 ---
 
 ## 1 Strategy and Attack Graphs

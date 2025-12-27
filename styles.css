@@ -1571,16 +1571,17 @@ body.modal-open {
 .right-panel::-webkit-scrollbar-track,
 .params-container::-webkit-scrollbar-track,
 .content-area::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--tertiary-bg);
+    border-radius: 10px;
 }
 
 .left-panel::-webkit-scrollbar-thumb,
 .right-panel::-webkit-scrollbar-thumb,
 .params-container::-webkit-scrollbar-thumb,
 .content-area::-webkit-scrollbar-thumb {
-    background: var(--border-color);
+    background: var(--border-light);
     border-radius: 10px;
-    border: 2px solid transparent;
+    border: 2px solid var(--tertiary-bg);
     background-clip: padding-box;
 }
 
@@ -1588,8 +1589,15 @@ body.modal-open {
 .right-panel::-webkit-scrollbar-thumb:hover,
 .params-container::-webkit-scrollbar-thumb:hover,
 .content-area::-webkit-scrollbar-thumb:hover {
-    background: var(--border-light);
+    background: var(--border-color);
     background-clip: padding-box;
+}
+
+.left-panel,
+.right-panel,
+.params-container,
+.content-area {
+    scrollbar-color: var(--border-light) var(--tertiary-bg);
 }
 
 /* Panel Cards */
@@ -1905,6 +1913,17 @@ body.modal-open {
 .content-area ol li::marker {
     color: var(--accent-color);
     font-weight: 700;
+}
+
+.content-area li code {
+    background: var(--code-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+    font-size: 0.85rem;
+    display: inline-block;
 }
 
 .content-area a {
