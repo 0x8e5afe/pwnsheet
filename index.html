@@ -408,6 +408,7 @@
                     <div class="modal-tabs" data-tab-group="tools">
                         <button class="modal-tab-btn active" type="button" data-tab-target="tools-list">Tools</button>
                         <button class="modal-tab-btn" type="button" data-tab-target="wordlists-list">Wordlists</button>
+                        <button class="modal-tab-btn" type="button" data-tab-target="password-cracking-list">Password Cracking</button>
                     </div>
                     <div class="tab-panel active" data-tab-panel="tools-list">
                         <div class="tools-controls">
@@ -443,6 +444,26 @@
                                         <th>Wordlist <button class="header-sort-btn" type="button" data-sort-group="wordlists" data-sort-key="name"><i class="bi bi-chevron-expand" aria-hidden="true"></i><span class="sr-only">Sort by wordlist</span></button></th>
                                         <th>Category <button class="header-sort-btn" type="button" data-sort-group="wordlists" data-sort-key="category"><i class="bi bi-chevron-expand" aria-hidden="true"></i><span class="sr-only">Sort by category</span></button></th>
                                         <th>Download</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-panel" data-tab-panel="password-cracking-list">
+                        <div class="tools-controls">
+                            <label class="modal-field tools-search">
+                                <span>Search Password Cracking</span>
+                                <input type="text" id="passwordCrackingSearch" placeholder="Search by tool or use case" autocomplete="off">
+                            </label>
+                        </div>
+                        <div class="modal-table-wrap" data-copy-zone>
+                            <table class="modal-table data-table" id="passwordCrackingTable">
+                                <thead>
+                                    <tr>
+                                        <th>Tool <button class="header-sort-btn" type="button" data-sort-group="password-cracking" data-sort-key="tool"><i class="bi bi-chevron-expand" aria-hidden="true"></i><span class="sr-only">Sort by tool</span></button></th>
+                                        <th>Use Case <button class="header-sort-btn" type="button" data-sort-group="password-cracking" data-sort-key="useCase"><i class="bi bi-chevron-expand" aria-hidden="true"></i><span class="sr-only">Sort by use case</span></button></th>
+                                        <th>Command</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -492,10 +513,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="scripts/constants.js?v=2"></script>
+<script src="scripts/constants.js?v=4"></script>
 <script src="scripts/utils.js?v=2"></script>
 <script src="scripts/copy.js?v=2"></script>
-<script src="scripts/modals.js?v=2"></script>
+<script src="scripts/modals.js?v=4"></script>
 <script src="scripts/content.js?v=3"></script>
 <script src="scripts/main.js?v=3"></script>
 </body>
