@@ -1119,11 +1119,50 @@ function setupModalCopyZones() {
 }
 
 function setupToolsTable() {
-    const toolRows = (TOOLBOX_ITEMS || []).map(tool => ({
-        name: tool.name,
-        category: tool.category,
-        installation: Array.isArray(tool.installation) ? tool.installation.join('\n') : '',
-        linkHtml: tool.link ? `<a href="${escapeHtml(tool.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(tool.linkLabel || 'Link')}</a>` : ''
+    const toolMap = new Map();
+
+    (TOOLBOX_ITEMS || []).forEach(tool => {
+        const name = (tool.name || '').trim();
+        const key = name.toLowerCase();
+        if (!key) {
+            return;
+        }
+
+        if (!toolMap.has(key)) {
+            toolMap.set(key, {
+                name,
+                categories: [],
+                installationLines: [],
+                link: tool.link || '',
+                linkLabel: tool.linkLabel || ''
+            });
+        }
+
+        const entry = toolMap.get(key);
+        if (tool.category && !entry.categories.includes(tool.category)) {
+            entry.categories.push(tool.category);
+        }
+        if (Array.isArray(tool.installation)) {
+            tool.installation
+                .map(line => line.trim())
+                .filter(Boolean)
+                .forEach(line => {
+                    if (!entry.installationLines.includes(line)) {
+                        entry.installationLines.push(line);
+                    }
+                });
+        }
+        if (!entry.link && tool.link) {
+            entry.link = tool.link;
+            entry.linkLabel = tool.linkLabel || entry.linkLabel;
+        }
+    });
+
+    const toolRows = Array.from(toolMap.values()).map(entry => ({
+        name: entry.name,
+        category: entry.categories.join(' / '),
+        installation: entry.installationLines.join('\n'),
+        linkHtml: entry.link ? `<a href="${escapeHtml(entry.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.linkLabel || 'Link')}</a>` : ''
     }));
 
     const wordlistRows = (WORDLISTS || []).map(list => ({
