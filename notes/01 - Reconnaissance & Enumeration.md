@@ -153,6 +153,9 @@ sudo nmap -sC -sV -p <PORTS> <RHOST>
 # UDP top ports
 sudo nmap -sU --top-ports 20 <RHOST>
 
+# UDP scan of top 100 ports (recommended minimum)
+sudo nmap -sU --top-ports 100 <RHOST> -oA nmap_udp_top100_<RHOST>
+
 # SMB null session
 smbclient -L //<RHOST> -N && enum4linux -a <RHOST>
 
@@ -180,35 +183,6 @@ httpx -l hosts_http.txt -status-code -title -tech-detect -o httpx_hosts_http.txt
 # External subdomain discovery quick combo
 subfinder -d <DOMAIN> -all -o subdomains_<DOMAIN>.txt
 dnsx -l subdomains_<DOMAIN>.txt -a -resp-only -o resolved_subdomains_<DOMAIN>.txt
-```
-
----
-
-## Tools Installation Check
-
-Before starting, verify tools are available:
-
-```bash
-# Core scanning
-which nmap masscan
-
-# Web enumeration
-which gobuster feroxbuster ffuf nikto whatweb wpscan
-
-# SMB tools
-which smbclient smbmap enum4linux enum4linux-ng rpcclient
-
-# Network tools
-which snmpwalk onesixtyone ldapsearch
-
-# Password attacks
-which hydra medusa
-
-# AD tools
-which bloodhound-python kerbrute impacket-GetNPUsers impacket-GetUserSPNs
-
-# NetExec/CrackMapExec
-which nxc netexec crackmapexec
 ```
 
 ---
@@ -669,11 +643,11 @@ ffuf -w /usr/share/wordlists/dirb/common.txt \
 # Basic directory fuzzing with extensions
 ffuf -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt \
   -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/FUZZ \
-  -e .php,.html,.txt,.bak,.zip,.log -ac
+  -e .php,.html,.txt,.bak,.zip,.log -ac -ic
 
 # Recursive scanning
 ffuf -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt \
-  -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/FUZZ -recursion -ac
+  -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/FUZZ -recursion -ac -ic
 
 # VHost fuzzing
 ffuf -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt \
