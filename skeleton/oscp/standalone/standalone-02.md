@@ -24,13 +24,13 @@
 
 ### Nmap
 
-#### Fast TCP Scan
+#### TCP Scan
 
 ```
 
 ```
 
-#### Detailed TCP Scan
+#### UDP Scan
 
 ```
 
