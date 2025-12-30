@@ -1,10 +1,9 @@
-# Machine - XXXXX
+# Machine - [NAME]
 
 ## Target Info
 
-- **IP:** 
-- **Hostname:** 
-- **OS:** 
+- **IP:** [IP]
+- **OS:** [Windows/Linux]
 - **Points**: +10 for initial access, +10 for privesc
 
 ## Open Ports
@@ -128,7 +127,12 @@
 
 ## Loot / Proof
 
-- 
+**Flag Location:** `[flag_path]`  
+**Flag:** `[flag_value]`
+
+**Flag Location:** `[flag_path]`   
+**Flag:** `[flag_value]`
+
 
 ## Cleanup
 

