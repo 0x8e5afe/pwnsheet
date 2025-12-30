@@ -1247,6 +1247,34 @@ const TOOLBOX_ITEMS = [
         linkLabel: 'GitHub',
         installation: ['sudo apt update && sudo apt install commix -y']
     },
+{
+        name: 'PrintSpoofer',
+        category: 'Privilege Escalation',
+        link: 'https://github.com/itm4n/PrintSpoofer',
+        linkLabel: 'GitHub',
+        installation: ['wget https://github.com/itm4n/PrintSpoofer/releases/download/v1.0/PrintSpoofer64.exe']
+    },
+    {
+        name: 'GodPotato',
+        category: 'Privilege Escalation',
+        link: 'https://github.com/BeichenDream/GodPotato',
+        linkLabel: 'GitHub',
+        installation: ['wget https://github.com/BeichenDream/GodPotato/releases/latest/download/GodPotato-NET4.exe']
+    },
+    {
+        name: 'JuicyPotato',
+        category: 'Privilege Escalation',
+        link: 'https://github.com/ohpe/juicy-potato',
+        linkLabel: 'GitHub',
+        installation: ['wget https://github.com/ohpe/juicy-potato/releases/download/v0.1/JuicyPotato.exe']
+    },
+    {
+        name: 'RoguePotato',
+        category: 'Privilege Escalation',
+        link: 'https://github.com/antonioCoco/RoguePotato',
+        linkLabel: 'GitHub',
+        installation: ['wget https://github.com/antonioCoco/RoguePotato/releases/download/1.0/RoguePotato.exe']
+    },
 
     // ===== PASSWORD CRACKING =====
     {
