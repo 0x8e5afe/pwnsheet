@@ -3,8 +3,5 @@
   "standalone/standalone-01.md",
   "standalone/standalone-02.md",
   "standalone/standalone-03.md",
-  "AD/general.md",
-  "AD/machines/ad-01.md",
-  "AD/machines/ad-02.md",
-  "AD/machines/ad-03.md"
+  "AD/writeup.md"
 ]

