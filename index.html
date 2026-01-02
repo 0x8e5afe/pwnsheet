@@ -19,7 +19,7 @@
                     <button class="header-icon-btn" id="fileTransferBtn" type="button" aria-label="Open file transfer commands" title="File transfer helper">
                         <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
                     </button>
-                    <button class="header-icon-btn" id="reverseShellBtn" type="button" aria-label="Open reverse shell generator" title="Shells helper">
+                    <button class="header-icon-btn" id="reverseShellBtn" type="button" aria-label="Open shell toolkit" title="Shell toolkit">
                         <i class="bi bi-terminal" aria-hidden="true"></i>
                     </button>
                     <button class="header-icon-btn" id="toolsBtn" type="button" aria-label="Open pentest tools list" title="Tools & wordlists">
@@ -268,7 +268,7 @@
         <div class="pwn-modal-header">
             <div>
                 <p class="pwn-modal-eyebrow">Remote Code Execution</p>
-                <h2>Shells Helper</h2>
+                <h2>Shell Toolkit</h2>
             </div>
             <button class="pwn-modal-close" type="button" data-close-modal aria-label="Close reverse shell modal">
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -278,77 +278,130 @@
             <div class="modal-section">
                 <div class="section-header">
                     <div>
-                        <p class="section-kicker">Connection</p>
-                        <h3 class="section-title">Targets &amp; listeners</h3>
-                        <p class="section-description">Populate once and reuse the same values across every helper tab.</p>
-                    </div>
-                    <span class="section-pill">
-                        <i class="bi bi-broadcast-pin" aria-hidden="true"></i>
-                        Parameter aware
-                    </span>
-                </div>
-                <div class="section-body">
-                    <div class="modal-field-grid">
-                        <label class="modal-field">
-                            <span>LHOST</span>
-                            <input type="text" id="reverseLhost" placeholder="e.g., 10.10.14.8" autocomplete="off">
-                            <span class="field-error" id="reverseLhostError"></span>
-                        </label>
-                        <label class="modal-field">
-                            <span>LPORT</span>
-                            <input type="text" id="reverseLport" inputmode="numeric" placeholder="e.g., 4444" autocomplete="off">
-                            <span class="field-error" id="reverseLportError"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-section">
-                <div class="section-header">
-                    <div>
-                        <p class="section-kicker">Recipes</p>
-                        <h3 class="section-title">Shells helper</h3>
+                        <p class="section-kicker">Library</p>
+                        <h3 class="section-title">Payloads &amp; handlers</h3>
                         <p class="section-description">Switch tabs for payloads, upload bypasses, webshells, and stabilisation.</p>
                     </div>
                 </div>
                 <div class="section-body">
                     <div class="modal-tabs" data-tab-group="reverse-shell">
                         <button class="modal-tab-btn active" type="button" data-tab-target="reverse-generic">Reverse Shells</button>
+                        <button class="modal-tab-btn" type="button" data-tab-target="bind-generic">Bind Shells</button>
                         <button class="modal-tab-btn" type="button" data-tab-target="reverse-msfvenom">MSFvenom</button>
                         <button class="modal-tab-btn" type="button" data-tab-target="reverse-webshells">Webshells</button>
                         <button class="modal-tab-btn" type="button" data-tab-target="reverse-upload">Upload Bypass</button>
                         <button class="modal-tab-btn" type="button" data-tab-target="reverse-stab">Stabilisation</button>
                     </div>
                     <div class="tab-panel active" data-tab-panel="reverse-generic">
-                        <div class="modal-field-grid single field-stack">
+                        <div class="modal-field-grid field-stack shell-inputs-grid compact-gap">
+                            <label class="modal-field" id="reverseLhostField">
+                                <span>LHOST</span>
+                                <input type="text" id="reverseLhost" placeholder="e.g., 10.10.14.8" autocomplete="off">
+                                <span class="field-error" id="reverseLhostError"></span>
+                            </label>
+                            <label class="modal-field" id="reverseLportField">
+                                <span>LPORT</span>
+                                <input type="text" id="reverseLport" inputmode="numeric" placeholder="e.g., 4444" autocomplete="off">
+                                <span class="field-error" id="reverseLportError"></span>
+                            </label>
+                            <label class="modal-field" id="reverseRhostField">
+                                <span>RHOST</span>
+                                <input type="text" id="reverseRhost" placeholder="e.g., 10.10.10.10" autocomplete="off">
+                                <span class="field-error" id="reverseRhostError"></span>
+                            </label>
                             <label class="modal-field">
-                                <span>Shell Type</span>
+                                <span>OS</span>
+                                <select id="reverseOsFilter"></select>
+                            </label>
+                        </div>
+                        <div class="modal-field-grid field-stack shell-inputs-grid compact-gap">
+                            <label class="modal-field">
+                                <span>Shell</span>
+                                <select id="reverseShellFilter"></select>
+                            </label>
+                            <label class="modal-field">
+                                <span>Payload Type</span>
                                 <select id="reverseType"></select>
                             </label>
                         </div>
                         <div id="reverseCombinedCmd" class="snippet-stack"></div>
                     </div>
+                    <div class="tab-panel" data-tab-panel="bind-generic">
+                        <div class="modal-field-grid field-stack shell-inputs-grid compact-gap">
+                            <label class="modal-field" id="bindLhostField">
+                                <span>LHOST</span>
+                                <input type="text" id="bindLhost" placeholder="e.g., 10.10.14.8" autocomplete="off">
+                                <span class="field-error" id="bindLhostError"></span>
+                            </label>
+                            <label class="modal-field" id="bindLportField">
+                                <span>LPORT</span>
+                                <input type="text" id="bindLport" inputmode="numeric" placeholder="e.g., 4444" autocomplete="off">
+                                <span class="field-error" id="bindLportError"></span>
+                            </label>
+                            <label class="modal-field" id="bindRhostField">
+                                <span>RHOST</span>
+                                <input type="text" id="bindRhost" placeholder="e.g., 10.10.10.10" autocomplete="off">
+                                <span class="field-error" id="bindRhostError"></span>
+                            </label>
+                            <label class="modal-field">
+                                <span>OS</span>
+                                <select id="bindOsFilter"></select>
+                            </label>
+                        </div>
+                        <div class="modal-field-grid field-stack shell-inputs-grid compact-gap">
+                            <label class="modal-field">
+                                <span>Shell</span>
+                                <select id="bindShellFilter"></select>
+                            </label>
+                            <label class="modal-field">
+                                <span>Payload Type</span>
+                                <select id="bindType"></select>
+                            </label>
+                        </div>
+                        <div id="bindCombinedCmd" class="snippet-stack"></div>
+                    </div>
                     <div class="tab-panel" data-tab-panel="reverse-msfvenom">
                         <div class="msfvenom-section">
-                            <div class="msfvenom-header">
-                                <h3>MSFvenom Payload Generator</h3>
-                                <p>Build a payload and matching handler command.</p>
-                            </div>
-                            <div class="modal-field-grid msfvenom-grid">
-                                <label class="modal-field">
-                                    <span>Payload</span>
-                                    <select id="msfvenomPayload"></select>
-                                </label>
-                                <label class="modal-field">
-                                    <span>Output File Name</span>
-                                    <input type="text" id="msfvenomOutput" placeholder="payload" autocomplete="off">
-                                </label>
+                            <div class="msfvenom-inputs">
+                                <div class="modal-field-grid field-stack shell-inputs-grid compact-gap">
+                                    <label class="modal-field" id="msfLhostField">
+                                        <span>LHOST</span>
+                                        <input type="text" id="msfLhost" placeholder="e.g., 10.10.14.8" autocomplete="off">
+                                        <span class="field-error" id="msfLhostError"></span>
+                                    </label>
+                                    <label class="modal-field">
+                                        <span>LPORT</span>
+                                        <input type="text" id="msfLport" inputmode="numeric" placeholder="e.g., 4444" autocomplete="off">
+                                        <span class="field-error" id="msfLportError"></span>
+                                    </label>
+                                    <label class="modal-field" id="msfRhostField">
+                                        <span>RHOST</span>
+                                        <input type="text" id="msfRhost" placeholder="e.g., 10.10.10.10" autocomplete="off">
+                                        <span class="field-error" id="msfRhostError"></span>
+                                    </label>
+                                    <label class="modal-field">
+                                        <span>OS</span>
+                                        <select id="msfvenomOs"></select>
+                                    </label>
+                                </div>
+                                <div class="modal-field-grid field-stack shell-inputs-grid compact-gap">
+
+                                    <label class="modal-field">
+                                        <span>Payload</span>
+                                        <select id="msfvenomPayload"></select>
+                                    </label>
+                                    <label class="modal-field">
+                                        <span>Output File Name</span>
+                                        <input type="text" id="msfvenomOutput" placeholder="payload" autocomplete="off">
+                                    </label>
+                                </div>
                             </div>
                             <div id="msfvenomCombinedCmd" class="snippet-stack"></div>
                         </div>
                     </div>
                     <div class="tab-panel" data-tab-panel="reverse-webshells">
                         <div class="modal-field-grid single field-stack">
-                            <label class="modal-field">
+                            <label class="modal-field webshell-field">
                                 <span>Webshell Type</span>
                                 <select id="reverseWebType"></select>
                             </label>
@@ -357,19 +410,11 @@
                     </div>
                     <div class="tab-panel" data-tab-panel="reverse-upload">
                         <div class="reference-card" data-copy-zone>
-                            <div class="reverse-shell-heading">
-                                <h3>Upload Bypass</h3>
-                                <span>Extension tricks, content-types and magic numbers.</span>
-                            </div>
                             <div class="reference-content" id="reverseUploadContent"></div>
                         </div>
                     </div>
                     <div class="tab-panel" data-tab-panel="reverse-stab">
                         <div class="reference-card" data-copy-zone>
-                            <div class="reverse-shell-heading">
-                                <h3>Shell Stabilisation</h3>
-                                <span>Post-exploitation shell hardening steps.</span>
-                            </div>
                             <div class="reference-content" id="reverseStabContent"></div>
                         </div>
                     </div>
