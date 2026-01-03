@@ -2027,6 +2027,128 @@ Get-ChildItem -Path "\\<HOSTNAME>\<SHARE>" -Recurse -Include *.txt,*.xml,*.confi
 ### 17.5 BloodHound / SharpHound
 [Quick Start BloodHound CE](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart)
 
+### 🛠️ Architecture
+1. **Collector (SharpHound/AzureHound)**: Runs on the victim machine/network. Gathers data (users, groups, sessions, ACLs). Outputs a `.zip` file.
+2. **Visualizer (BloodHound GUI)**: Runs on the attacker machine.
+3. **Database (Neo4j)**: Stores the graph data.
+
+### Install BloodHound Community on the Attacker Machine
+
+##### PREREQUISITE: Increase the VM space to 40 GB and 4 GB of RAM
+To install BloodHound on a VM it needs at least 40GB of space and at least 4 GB or RAM. Check it in the VM settings, otherwise extend if from the settings:
+- Open the VM Settings, select Hard Disk, select 40GB. (You will probably receive a message like this: Use the disk maintenance tools in your guest operating system to resize or create partitions to fill the available space. Click ok)
+- Reopen Kali and install the Guest Additions 
+``` bash 
+sudo apt update
+sudo apt install -y cloud-guest-utils
+```
+- Extend the LMV partition, you can check his name by running 
+``` bash
+lsblk
+
+nvme0n1     259:0    0   40G  0 disk 
+├─nvme0n1p1 259:1    0   16M  0 part 
+├─nvme0n1p2 259:2    0  967M  0 part /boot/efi
+├─nvme0n1p3 259:3    0   18G  0 part /
+└─nvme0n1p4 259:4    0    1G  0 part [SWAP]
+
+```
+in this case the name of the partition to be extended is "nvme0n1" number "3" (you see it because it's the only one still at 18GB and that needs to be extended)
+``` bash
+# Disable the swap partition
+sudo swapoff -a
+
+# Open fdisk
+sudo fdisk /dev/nvme0n1
+# Inside fdisk write exactly:
+d
+4
+w
+
+# Reload the table
+sudo partprobe
+# Extend the partition 3
+sudo growpart /dev/nvme0n1 3
+# Check it 
+lsblk
+
+# Extend ext4 
+sudo resize2fs /dev/nvme0n1p3
+# Verify 
+df -h /
+
+# Recreate the swap space (2GB)
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+swapon --show
+sudo nano /etc/fstab
+
+# add this raw at the end
+/swapfile none swap sw 0 0
+```
+
+At the end you should have the system looking like so:
+``` bash
+
+lsblk
+
+NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+
+sr0          11:0    1 1024M  0 rom  
+
+nvme0n1     259:0    0   40G  0 disk 
+
+├─nvme0n1p1 259:1    0   16M  0 part 
+
+├─nvme0n1p2 259:2    0  967M  0 part /boot/efi
+
+└─nvme0n1p3 259:3    0   39G  0 part /
+
+swapon --show
+
+NAME      TYPE SIZE USED PRIO
+
+/swapfile file   2G   0B   -2
+```
+
+NOTE: remember that you need at least 4 GB of RAM to run BloodHound!!!
+
+```bash 
+sudo apt update && sudo apt upgrade -y
+sudo apt install docker.io
+
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.32.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+mkdir BloodHound && cd BloodHound 
+
+curl -L https://ghst.ly/getbhce > docker-compose.yml
+sudo docker-compose pull && sudo docker-compose up
+
+# NOTE! BloodHound displays the randomly generated initial password in the terminal!! Copy it to authenticate in the UI. For example:
+# Initial Password Set To:    CUzdedtGIcZhXSQzlVOCuxIo4LdV5CUg
+```
+
+You can then access it by navigating to: http://localhost:8080/ui/login
+
+Email Admin: admin
+Password: see before
+
+If you lost your password, you can retrieve it like so:
+``` bash
+cd BloodHound
+sudo docker logs --tail=500 bloodhound-bloodhound-1 | egrep -i "password|admin|credential|initial|generated"
+
+# You will see something like this # Initial Password Set To:    CUzdedtGIcZhXSQzlVOCuxIo4LdV5CUg    #
+```
+
+In case of issues, follow this guide: https://breachar.medium.com/install-bloodhound-ce-under-kali-linux-2024-4-2a68feebdb62
+
+
+### 📥 Data Collection
 #### Linux - BloodHound Python
 ```bash
 # Standard auth - full collection
@@ -2066,7 +2188,6 @@ bloodhound-python -c Group,LocalAdmin,Session,Trusts -u <USER> -p <PASS> -d <DOM
 # Domain specification
 .\SharpHound.exe -c All -d  --outputdirectory C:\Temp
 ```
-
 
 #### PowerView ACL Analysis
 ```powershell

