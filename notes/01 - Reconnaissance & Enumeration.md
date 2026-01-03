@@ -1893,6 +1893,11 @@ Get-Domain
 Get-DomainController
 Get-DomainTrust
 Get-DomainPolicy
+
+# Alternative (No AD Module)
+[System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+[System.DirectoryServices.ActiveDirectory.Forest]::GetCurrentForest()
+nltest /domain_trusts
 ```
 
 ---
@@ -1935,6 +1940,7 @@ Get-DomainGroup
 Get-DomainGroupMember "Domain Admins"
 Get-DomainComputer
 Get-DomainComputer -Ping
+
 ```
 
 ---
