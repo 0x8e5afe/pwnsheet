@@ -237,6 +237,15 @@ function hydrateModal(modalId) {
     }
 }
 
+function resetShellSelectionState(select, fallbackValue = '/bin/sh') {
+    if (!select || !select.options.length) {
+        return;
+    }
+    const hasFallback = Array.from(select.options).some(option => option.value === fallbackValue);
+    select.value = hasFallback ? fallbackValue : select.options[0].value;
+    select.dataset.userSelected = 'false';
+}
+
 function resetModalState(modalId) {
     if (modalId === 'fileTransferModal') {
         const fromSelect = document.getElementById('transferFrom');
@@ -306,13 +315,13 @@ function resetModalState(modalId) {
             const linuxOption = Array.from(reverseOsFilter.options).find(option => option.value === 'linux');
             reverseOsFilter.value = linuxOption ? 'linux' : reverseOsFilter.options[0].value;
         }
-        if (reverseShellFilter && reverseShellFilter.options.length) reverseShellFilter.selectedIndex = 0;
+        resetShellSelectionState(reverseShellFilter);
         if (typeSelect && typeSelect.options.length) typeSelect.selectedIndex = 0;
         if (bindOsFilter && bindOsFilter.options.length) {
             const linuxOption = Array.from(bindOsFilter.options).find(option => option.value === 'linux');
             bindOsFilter.value = linuxOption ? 'linux' : bindOsFilter.options[0].value;
         }
-        if (bindShellFilter && bindShellFilter.options.length) bindShellFilter.selectedIndex = 0;
+        resetShellSelectionState(bindShellFilter);
         if (bindTypeSelect && bindTypeSelect.options.length) bindTypeSelect.selectedIndex = 0;
         if (msfOs && msfOs.options.length) {
             const linuxOption = Array.from(msfOs.options).find(option => option.value === 'linux');
@@ -664,6 +673,17 @@ function populateShellCommandSelect(select, osKey, preferredValue) {
     }
 }
 
+function isShellSelectionExplicit(select) {
+    return Boolean(select) && select.dataset.userSelected === 'true';
+}
+
+function setShellSelectionExplicit(select, explicit) {
+    if (!select) {
+        return;
+    }
+    select.dataset.userSelected = explicit ? 'true' : 'false';
+}
+
 function getShellFilterElements(prefix) {
     return {
         os: document.getElementById(`${prefix}OsFilter`),
@@ -731,17 +751,26 @@ function setupShellTemplateFilters(prefix, templates, onUpdate) {
         os.value = hasLinux ? 'linux' : os.options[0].value;
     }
     if (shell) {
-        populateShellCommandSelect(shell, os?.value, '/bin/sh');
+        const storedShell = getStoredParamValue('SHELL');
+        populateShellCommandSelect(shell, os?.value, storedShell || '/bin/sh');
+        setShellSelectionExplicit(shell, Boolean(storedShell));
     }
 
     const refresh = () => {
+        let shellChanged = false;
         if (shell) {
             const preferred = shell.value || '/bin/sh';
             populateShellCommandSelect(shell, os?.value, preferred);
+            if (isShellSelectionExplicit(shell)) {
+                shellChanged = syncParameterValue('SHELL', shell.value, { refreshContent: false, updatePanel: false });
+            }
         }
         updateShellTemplateSelect(prefix, templates);
         if (typeof onUpdate === 'function') {
             onUpdate();
+        }
+        if (shellChanged) {
+            refreshContentFromParameters();
         }
     };
 
@@ -752,6 +781,7 @@ function setupShellTemplateFilters(prefix, templates, onUpdate) {
     });
     if (shell) {
         shell.addEventListener('change', () => {
+            setShellSelectionExplicit(shell, true);
             const changed = syncParameterValue('SHELL', shell.value, { refreshContent: false });
             if (typeof onUpdate === 'function') {
                 onUpdate();
@@ -793,16 +823,19 @@ function setupReverseShellModal() {
             syncShellInputs(groups, sourceKey);
         }
         const values = getPrimaryShellValues(groups);
-        const shellValue = getSelectedShellValue('reverse');
+        const reverseShellFilter = document.getElementById('reverseShellFilter');
         const changed =
             syncParameterValue('LHOST', values.lhost, { refreshContent: false }) ||
             syncParameterValue('LPORT', values.lport, { refreshContent: false }) ||
-            syncParameterValue('RHOST', values.rhost, { refreshContent: false }) ||
-            syncParameterValue('SHELL', shellValue, { refreshContent: false });
+            syncParameterValue('RHOST', values.rhost, { refreshContent: false });
+        let shellChanged = false;
+        if (isShellSelectionExplicit(reverseShellFilter)) {
+            shellChanged = syncParameterValue('SHELL', getSelectedShellValue('reverse'), { refreshContent: false });
+        }
         renderReverseShellCommands();
         renderBindShellCommands();
         renderMsfvenomCommands();
-        if (changed) {
+        if (changed || shellChanged) {
             refreshContentFromParameters();
         }
     };
@@ -841,14 +874,22 @@ function refreshReverseModalState() {
     const changed =
         syncParameterValue('LHOST', values.lhost, { refreshContent: false }) ||
         syncParameterValue('LPORT', values.lport, { refreshContent: false }) ||
-        syncParameterValue('RHOST', values.rhost, { refreshContent: false }) ||
-        syncParameterValue('SHELL', getSelectedShellValue('reverse'), { refreshContent: false });
+        syncParameterValue('RHOST', values.rhost, { refreshContent: false });
+    let shellChanged = false;
 
     if (reverseShellFilter) {
         populateShellCommandSelect(reverseShellFilter, reverseOsFilter?.value, reverseShellFilter.value || '/bin/sh');
+        if (isShellSelectionExplicit(reverseShellFilter)) {
+            shellChanged = syncParameterValue('SHELL', getSelectedShellValue('reverse'), { refreshContent: false, updatePanel: false });
+        }
     }
     if (bindShellFilter) {
         populateShellCommandSelect(bindShellFilter, bindOsFilter?.value, bindShellFilter.value || '/bin/sh');
+        if (isShellSelectionExplicit(bindShellFilter)) {
+            shellChanged =
+                syncParameterValue('SHELL', getSelectedShellValue('bind'), { refreshContent: false, updatePanel: false }) ||
+                shellChanged;
+        }
     }
     updateShellTemplateSelect('reverse', REVERSE_SHELL_TEMPLATES);
     updateShellTemplateSelect('bind', BIND_SHELL_TEMPLATES);
@@ -856,7 +897,7 @@ function refreshReverseModalState() {
     renderBindShellCommands();
     renderMsfvenomCommands();
 
-    if (changed) {
+    if (changed || shellChanged) {
         refreshContentFromParameters();
     }
 }
