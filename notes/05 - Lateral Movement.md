@@ -336,18 +336,6 @@ crackmapexec smb <SUBNET_CIDR> -u users.txt -p <PASSWORD> --continue-on-success
 | **Credential harvesting** | ❌ | ✅ (--sam, --lsa, --ntds) |
 | **Best for** | Quick multi-protocol validation | Full engagement workflow |
 
-**Use authfinder when:**
-- Testing credentials against mixed Windows/Linux environments
-- Need quick validation across multiple protocols
-- Want single-command multi-protocol testing
-- Performing initial credential mapping
-
-**Use CrackMapExec when:**
-- Need command execution after validation
-- Want to dump credentials (SAM, LSA, NTDS)
-- Require database tracking of credentials
-- Need BloodHound integration
-- Performing comprehensive Active Directory enumeration
 ---
 
 ## 3 Windows Lateral Movement
